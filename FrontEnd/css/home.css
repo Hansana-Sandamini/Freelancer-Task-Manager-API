@@ -1,0 +1,35 @@
+body {
+    background: url("../assets/home-background.png") no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+}
+
+.hero-section {
+    background: linear-gradient(rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.2));
+    color: white;
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
+    margin: 2rem auto;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    padding: 20px 0;
+}

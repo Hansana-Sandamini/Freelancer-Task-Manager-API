@@ -1,0 +1,20 @@
+.navbar {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.btn-custom {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    transition: all 0.3s;
+}
+
+.btn-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+footer {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    margin-top: auto;
+    padding: 1.5rem 0;
+}
