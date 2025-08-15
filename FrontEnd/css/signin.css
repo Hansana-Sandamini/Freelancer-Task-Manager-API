@@ -1,0 +1,171 @@
+body {
+    background: linear-gradient(135deg, #b1bfd5 0%, #00173b 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
+
+/* Base Container Styles */
+.login-container {
+    max-width: 450px;
+    margin: 5rem auto;
+    padding: 2.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Header Styles */
+.login-container h2 {
+    color: #2d3748;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+/* Social Login Buttons */
+.social-login .btn {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-google,
+.btn-github {
+    background-color: #fff;
+    color: #5f6368;
+    border: 1px solid #dadce0;
+}
+
+.btn-google:hover,
+.btn-github:hover {
+    background-color: #f8f9fa;
+    border-color: #a2bee7;
+}
+
+/* Divider Styling */
+.divider {
+    position: relative;
+    margin: 1.75rem 0;
+    text-align: center;
+}
+
+.divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #000000;
+    z-index: 1;
+}
+
+.divider span {
+    position: relative;
+    display: inline-block;
+    padding: 0 12px;
+    background: white;
+    color: black;
+    z-index: 2;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+/* Form Styles */
+.form-control {
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #c5ccd7;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Password Input Container */
+.password-container {
+    position: relative;
+}
+
+/* Remember Me & Forgot Password */
+.form-check-input {
+    border: 1px solid #a1b9d3;
+}
+
+.form-check-label {
+    color: #000000;
+    font-size: 0.99rem;
+}
+
+.forgot-password {
+    color: #506be7;
+    font-size: 0.99rem;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.forgot-password:hover {
+    color: #5a67d8;
+    text-decoration: underline;
+}
+
+/* Login Button */
+.login-btn {
+    width: 100%;
+    padding: 0.875rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1.3rem;
+    letter-spacing: 0.5px;
+    margin-top: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Sign Up Link */
+.signup-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #050505;
+    font-size: 0.99rem;
+}
+
+.signup-link a {
+    color: #506be7;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.signup-link a:hover {
+    color: #5a67d8;
+    text-decoration: underline;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 576px) {
+    .login-container {
+        margin: 2rem auto;
+        padding: 1.5rem;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    .social-login .btn {
+        padding: 0.65rem;
+    }
+}
