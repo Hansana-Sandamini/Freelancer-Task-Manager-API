@@ -136,24 +136,32 @@ body {
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
 }
 
-/* Sign Up Link */
-.signup-link {
+/* Sign Up & Sign In Link */
+.signup-link,
+.signin-link {
     text-align: center;
     margin-top: 1.5rem;
     color: #050505;
     font-size: 0.99rem;
 }
 
-.signup-link a {
+.signup-link a,
+.signin-link a {
     color: #506be7;
     font-weight: 500;
     text-decoration: none;
     transition: color 0.2s;
 }
 
-.signup-link a:hover {
+.signup-link a:hover,
+.signin-link a:hover {
     color: #5a67d8;
     text-decoration: underline;
+}
+
+.role-selector .btn-check:checked + .btn {
+    background-color: #5e80ee;
+    color: white;
 }
 
 /* Responsive Adjustments */
