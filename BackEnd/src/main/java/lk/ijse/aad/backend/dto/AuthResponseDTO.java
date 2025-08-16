@@ -11,4 +11,8 @@ public class AuthResponseDTO {
     private Long userId;
     private String email;
     private String role;
+
+    public AuthResponseDTO(String accessToken) {
+        this.accessToken = accessToken;
+    }
 }

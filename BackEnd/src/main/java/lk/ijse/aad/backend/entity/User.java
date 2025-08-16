@@ -20,6 +20,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String name;
+
     @Enumerated(EnumType.STRING)
     private Role role;  // ADMIN, FREELANCER, CLIENT
 
