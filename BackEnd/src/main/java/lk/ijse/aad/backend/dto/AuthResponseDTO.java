@@ -12,7 +12,8 @@ public class AuthResponseDTO {
     private String email;
     private String role;
 
-    public AuthResponseDTO(String accessToken) {
+    public AuthResponseDTO(String accessToken, String role) {
         this.accessToken = accessToken;
+        this.role = role;
     }
 }

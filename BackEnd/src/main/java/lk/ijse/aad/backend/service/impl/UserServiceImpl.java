@@ -14,6 +14,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,10 +39,18 @@ public class UserServiceImpl implements UserService {
                 )
         );
 
-        // If successful, generate token
         if (authentication.isAuthenticated()) {
-            String accessToken = jwtUtil.generateToken(authDTO.getEmail());
-            return new AuthResponseDTO(accessToken);
+            // Get User from DB
+            User user = userRepository.findByEmail(authDTO.getEmail())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            // Generate tokens
+            String accessToken = jwtUtil.generateToken(user.getEmail());
+
+            return new AuthResponseDTO(
+                    accessToken,
+                    user.getRole().name()
+            );
         } else {
             throw new BadCredentialsException("Invalid credentials");
         }
@@ -61,7 +70,7 @@ public class UserServiceImpl implements UserService {
                 .email(registerDTO.getEmail())
                 .password(passwordEncoder.encode(registerDTO.getPassword()))
                 .name(registerDTO.getName())
-                .role(Role.valueOf("FREELANCER")) // Default role
+                .role(Role.valueOf(registerDTO.getRole()))
                 .build();
 
         // Save user to database
