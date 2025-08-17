@@ -131,3 +131,22 @@ if (signinForm) {
         }
     });
 }
+
+// ==================== Logout ====================
+// Show logged in user email
+document.getElementById("userEmail").textContent = localStorage.getItem("email") || "Freelancer";
+
+document.getElementById("logoutBtn").addEventListener("click", function () {
+    // Clear localStorage (JWT + user info)
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
+    localStorage.removeItem("role");
+
+    // Redirect to sign-in page
+    window.location.href = "/FrontEnd/index.html";
+});
+
+//  Protect dashboard (redirect if not logged in)
+if (!localStorage.getItem("token")) {
+    window.location.href = "/FrontEnd/index.html";
+}
