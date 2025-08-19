@@ -4,7 +4,6 @@ import lk.ijse.aad.backend.dto.ApiResponse;
 import lk.ijse.aad.backend.dto.TaskDTO;
 import lk.ijse.aad.backend.service.TaskService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +16,6 @@ import java.util.List;
 @CrossOrigin
 public class TaskController {
 
-    @Autowired
     private final TaskService taskService;
 
     @PostMapping

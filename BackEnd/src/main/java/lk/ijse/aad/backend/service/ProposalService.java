@@ -9,4 +9,7 @@ public interface ProposalService {
     void updateProposal(ProposalDTO proposalDTO);
     void deleteProposal(String proposalId);
     List<ProposalDTO> getAllProposals();
+    ProposalDTO getProposalById(Long id);
+    List<ProposalDTO> getProposalsByTaskId(Long taskId);
+    List<ProposalDTO> getProposalsByFreelancerId(Long freelancerId);
 }
