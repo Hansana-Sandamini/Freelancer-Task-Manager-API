@@ -1,10 +1,7 @@
 package lk.ijse.aad.backend.service.impl;
 
 import lk.ijse.aad.backend.dto.ProposalDTO;
-import lk.ijse.aad.backend.entity.Proposal;
-import lk.ijse.aad.backend.entity.ProposalStatus;
-import lk.ijse.aad.backend.entity.Task;
-import lk.ijse.aad.backend.entity.User;
+import lk.ijse.aad.backend.entity.*;
 import lk.ijse.aad.backend.repository.ProposalRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.repository.UserRepository;
@@ -30,51 +27,108 @@ public class ProposalServiceImpl implements ProposalService {
 
     @Override
     public void saveProposal(ProposalDTO proposalDTO) {
-        User freelancer = userRepository.findById(proposalDTO.getFreelancer().getId())
-                .orElseThrow(() -> new RuntimeException("Freelancer not found"));
+        try {
+            User freelancer = userRepository.findById(proposalDTO.getFreelancerId())
+                    .orElseThrow(() -> new RuntimeException("Freelancer not found with ID: " + proposalDTO.getFreelancerId()));
 
-        Task task = taskRepository.findById(proposalDTO.getTask().getId())
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+            Task task = taskRepository.findById(proposalDTO.getTaskId())
+                    .orElseThrow(() -> new RuntimeException("Task not found with ID: " + proposalDTO.getTaskId()));
 
-        Proposal proposal = modelMapper.map(proposalDTO, Proposal.class);
-        proposal.setFreelancer(freelancer);
-        proposal.setTask(task);
-        proposal.setSubmittedAt(LocalDateTime.now());
-        proposal.setStatus(ProposalStatus.PENDING);
+            Proposal proposal = modelMapper.map(proposalDTO, Proposal.class);
+            proposal.setCoverLetter(proposalDTO.getCoverLetter());
+            proposal.setBidAmount(proposalDTO.getBidAmount());
+            proposal.setSubmittedAt(LocalDateTime.now());
+            proposal.setStatus(ProposalStatus.PENDING);
+            proposal.setFreelancer(freelancer);
+            proposal.setTask(task);
 
-        proposalRepository.save(proposal);
-        log.info("Proposal saved successfully for task: {}", task.getTitle());
+            proposalRepository.save(proposal);
+            log.info("Proposal saved successfully for task: {}", task.getTitle());
+
+        } catch (Exception e) {
+            log.error("Error while saving task: {}", proposalDTO.getTaskId(), e);
+            throw new RuntimeException("Failed to save proposal: " + e.getMessage(), e);
+        }
     }
 
     @Override
     public void updateProposal(ProposalDTO proposalDTO) {
-        Proposal existingProposal = proposalRepository.findById(proposalDTO.getId())
-                .orElseThrow(() -> new RuntimeException("Proposal not found"));
+        try {
+            Proposal proposal = proposalRepository.findById(proposalDTO.getId())
+                    .orElseThrow(() -> new RuntimeException("Proposal not found with ID: " + proposalDTO.getId()));
 
-        // Update fields
-        existingProposal.setCoverLetter(proposalDTO.getCoverLetter());
-        existingProposal.setBidAmount(proposalDTO.getBidAmount());
-        existingProposal.setStatus(ProposalStatus.valueOf(proposalDTO.getStatus()));
+            proposal.setCoverLetter(proposalDTO.getCoverLetter());
+            proposal.setBidAmount(proposalDTO.getBidAmount());
 
-        proposalRepository.save(existingProposal);
-        log.info("Proposal updated successfully: {}", proposalDTO.getId());
+            if (proposalDTO.getStatus() != null) {
+                proposal.setStatus(ProposalStatus.valueOf(proposalDTO.getStatus()));
+            }
+
+            proposalRepository.save(proposal);
+            log.info("Proposal updated successfully: {}", proposalDTO.getId());
+
+        } catch (Exception e) {
+            log.error("Error while updating proposal: {}", proposalDTO.getId(), e);
+            throw new RuntimeException("Failed to update proposal: " + e.getMessage(), e);
+        }
     }
 
     @Override
     public void deleteProposal(String proposalId) {
-        Long id = Long.parseLong(proposalId);
-        if (!proposalRepository.existsById(id)) {
-            throw new RuntimeException("Proposal not found");
+        try {
+            Long id = Long.parseLong(proposalId);
+            if (!proposalRepository.existsById(id)) {
+                throw new RuntimeException("Proposal not found with ID: " + proposalId);
+            }
+            proposalRepository.deleteById(id);
+            log.info("Proposal deleted successfully: {}", proposalId);
+
+        } catch (Exception e) {
+            log.error("Error while deleting proposal: {}", proposalId, e);
+            throw new RuntimeException("Failed to delete proposal: " + e.getMessage(), e);
         }
-        proposalRepository.deleteById(id);
-        log.info("Proposal deleted successfully: {}", proposalId);
     }
 
     @Override
     public List<ProposalDTO> getAllProposals() {
         return proposalRepository.findAll().stream()
-                .map(proposal -> modelMapper.map(proposal, ProposalDTO.class))
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public ProposalDTO getProposalById(Long id) {
+        Proposal proposal = proposalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Proposal not found with ID: " + id));
+        return convertToDTO(proposal);
+    }
+
+    @Override
+    public List<ProposalDTO> getProposalsByTaskId(Long taskId) {
+        return proposalRepository.findByTaskId(taskId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProposalDTO> getProposalsByFreelancerId(Long freelancerId) {
+        return proposalRepository.findByFreelancerId(freelancerId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private ProposalDTO convertToDTO(Proposal proposal) {
+        ProposalDTO dto = new ProposalDTO();
+        dto.setId(proposal.getId());
+        dto.setCoverLetter(proposal.getCoverLetter());
+        dto.setBidAmount(proposal.getBidAmount());
+        dto.setSubmittedAt(proposal.getSubmittedAt());
+        dto.setStatus(proposal.getStatus().name());
+        dto.setFreelancerId(proposal.getFreelancer().getId());
+        dto.setFreelancerName(proposal.getFreelancer().getName());
+        dto.setTaskId(proposal.getTask().getId());
+        dto.setTaskTitle(proposal.getTask().getTitle());
+        return dto;
     }
 
 }

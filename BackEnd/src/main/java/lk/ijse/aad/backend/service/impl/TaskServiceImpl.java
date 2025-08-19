@@ -28,7 +28,7 @@ public class TaskServiceImpl implements TaskService {
     public void saveTask(TaskDTO taskDTO) {
         try {
             User client = userRepository.findById(taskDTO.getClientId())
-                    .orElseThrow(() -> new RuntimeException("Client not found"));
+                    .orElseThrow(() -> new RuntimeException("Client not found with ID: " + taskDTO.getClientId()));
 
             Task task = modelMapper.map(taskDTO, Task.class);
             task.setClient(client);
@@ -39,6 +39,7 @@ public class TaskServiceImpl implements TaskService {
 
         } catch (Exception e) {
             log.error("Error while saving task: {}", taskDTO.getTitle(), e);
+            throw new RuntimeException("Failed to save task: " + e.getMessage(), e);
         }
     }
 
@@ -46,13 +47,12 @@ public class TaskServiceImpl implements TaskService {
     public void updateTask(TaskDTO taskDTO) {
         try {
             Task existingTask = taskRepository.findById(taskDTO.getId())
-                    .orElseThrow(() -> new RuntimeException("Task not found"));
+                    .orElseThrow(() -> new RuntimeException("Task not found with ID: " + taskDTO.getId()));
 
             // Update fields
             existingTask.setTitle(taskDTO.getTitle());
             existingTask.setDescription(taskDTO.getDescription());
             existingTask.setDeadline(taskDTO.getDeadline());
-            existingTask.setStatus(TaskStatus.valueOf(taskDTO.getStatus()));
 
             // Convert string status to enum
             if (taskDTO.getStatus() != null) {
@@ -64,24 +64,42 @@ public class TaskServiceImpl implements TaskService {
 
         } catch (Exception e) {
             log.error("Error while updating task: {}", taskDTO.getId(), e);
+            throw new RuntimeException("Failed to update task: " + e.getMessage(), e);
         }
     }
 
     @Override
     public void deleteTask(String taskId) {
-        Long id = Long.parseLong(taskId);
-        if (!taskRepository.existsById(id)) {
-            throw new RuntimeException("Task not found");
+        try {
+            Long id = Long.parseLong(taskId);
+            if (!taskRepository.existsById(id)) {
+                throw new RuntimeException("Task not found with ID: " + taskId);
+            }
+            taskRepository.deleteById(id);
+            log.info("Task deleted successfully: {}", taskId);
+
+        } catch (Exception e) {
+            log.error("Error while deleting task: {}", taskId, e);
+            throw new RuntimeException("Failed to delete task: " + e.getMessage(), e);
         }
-        taskRepository.deleteById(id);
-        log.info("Task deleted successfully: {}", taskId);
     }
 
     @Override
     public List<TaskDTO> getAllTasks() {
         return taskRepository.findAll().stream()
-                .map(task -> modelMapper.map(task, TaskDTO.class))
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    private TaskDTO convertToDTO(Task task) {
+        TaskDTO dto = new TaskDTO();
+        dto.setId(task.getId());
+        dto.setTitle(task.getTitle());
+        dto.setDescription(task.getDescription());
+        dto.setStatus(task.getStatus().name());
+        dto.setDeadline(task.getDeadline());
+        dto.setClientId(task.getClient().getId());
+        return dto;
     }
 
 }

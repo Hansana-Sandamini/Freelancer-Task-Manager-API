@@ -1,7 +1,5 @@
 package lk.ijse.aad.backend.dto;
 
-import lk.ijse.aad.backend.entity.Task;
-import lk.ijse.aad.backend.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +15,8 @@ public class ProposalDTO {
     private double bidAmount;
     private LocalDateTime submittedAt;
     private String status;
-    private User freelancer;
-    private Task task;
+    private Long freelancerId;
+    private String freelancerName;
+    private Long taskId;
+    private String taskTitle;
 }
