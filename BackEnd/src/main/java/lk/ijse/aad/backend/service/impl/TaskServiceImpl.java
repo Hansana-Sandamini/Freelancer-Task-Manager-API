@@ -26,35 +26,45 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void saveTask(TaskDTO taskDTO) {
-        User client = userRepository.findByEmail(taskDTO.getClient().getEmail())
-                .orElseThrow(() -> new RuntimeException("Client not found"));
+        try {
+            User client = userRepository.findById(taskDTO.getClientId())
+                    .orElseThrow(() -> new RuntimeException("Client not found"));
 
-        Task task = modelMapper.map(taskDTO, Task.class);
-        task.setClient(client);
-        task.setStatus(TaskStatus.OPEN);
+            Task task = modelMapper.map(taskDTO, Task.class);
+            task.setClient(client);
+            task.setStatus(TaskStatus.OPEN);
 
-        taskRepository.save(task);
-        log.info("Task saved successfully: {}", taskDTO.getTitle());
+            taskRepository.save(task);
+            log.info("Task saved successfully: {}", taskDTO.getTitle());
+
+        } catch (Exception e) {
+            log.error("Error while saving task: {}", taskDTO.getTitle(), e);
+        }
     }
 
     @Override
     public void updateTask(TaskDTO taskDTO) {
-        Task existingTask = taskRepository.findById(taskDTO.getId())
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+        try {
+            Task existingTask = taskRepository.findById(taskDTO.getId())
+                    .orElseThrow(() -> new RuntimeException("Task not found"));
 
-        // Update fields
-        existingTask.setTitle(taskDTO.getTitle());
-        existingTask.setDescription(taskDTO.getDescription());
-        existingTask.setDeadline(taskDTO.getDeadline());
-        existingTask.setStatus(TaskStatus.valueOf(taskDTO.getStatus()));
-
-        // Convert string status to enum
-        if (taskDTO.getStatus() != null) {
+            // Update fields
+            existingTask.setTitle(taskDTO.getTitle());
+            existingTask.setDescription(taskDTO.getDescription());
+            existingTask.setDeadline(taskDTO.getDeadline());
             existingTask.setStatus(TaskStatus.valueOf(taskDTO.getStatus()));
-        }
 
-        taskRepository.save(existingTask);
-        log.info("Task updated successfully: {}", taskDTO.getId());
+            // Convert string status to enum
+            if (taskDTO.getStatus() != null) {
+                existingTask.setStatus(TaskStatus.valueOf(taskDTO.getStatus()));
+            }
+
+            taskRepository.save(existingTask);
+            log.info("Task updated successfully: {}", taskDTO.getId());
+
+        } catch (Exception e) {
+            log.error("Error while updating task: {}", taskDTO.getId(), e);
+        }
     }
 
     @Override
