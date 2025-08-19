@@ -10,6 +10,7 @@
     />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/FrontEnd/css/styles.css">
+    <link rel="stylesheet" href="/FrontEnd/css/dashboard.css">
 </head>
 <body>
 <!-- Top Bar -->
@@ -19,16 +20,148 @@
             <i class="fas fa-tasks me-2" style="font-size: 2rem; color: white;"></i>
             <<a class="navbar-brand fw-bold fs-3">TaskFlow</a>
         </div>
+        <div class="d-flex align-items-center">
+            <!-- Notification Icon with Badge -->
+            <div class="dropdown me-4 position-relative">
+                <a href="#" class="text-white dropdown-toggle" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-bell fa-lg"></i>
+                    <span class="notification-badge">1</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="notificationDropdown" style="min-width: 350px;">
+                    <li class="dropdown-item-text fw-bold">Notifications</li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li class="notification-item unread p-2">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-medium">New proposal received</span>
+                            <small class="text-muted">10m ago</small>
+                        </div>
+                        <small class="text-muted">You've been received proposal for "Website Redesign" project</small>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-center text-primary" href="#">View all notifications</a></li>
+                </ul>
+            </div>
 
-        <div class="d-flex">
-            <a href="/FrontEnd/index.html" id="logoutBtn" class="btn btn-custom text-white" style="margin-right: 10px;">
-                Logout
-            </a>
+            <!-- User Profile with Dropdown -->
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="https://ui-avatars.com/api/?name=Hansana+Sandamini&background=fff&color=4e73df&bold=true" alt="User" width="32" height="32" class="rounded-circle me-2">
+                    <span class="d-none d-md-inline">Hi, Hansana</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end profile-dropdown shadow" aria-labelledby="dropdownUser">
+                    <li class="dropdown-item-text">
+                        <div class="d-flex align-items-center">
+                            <img src="https://ui-avatars.com/api/?name=Hansana+Sandamini&background=4e73df&color=fff&bold=true" alt="User" width="40" height="40" class="rounded-circle me-2">
+                            <div>
+                                <p class="mb-0 fw-bold">Hansana Sandamini</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i> My Profile</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Settings</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-question-circle me-2"></i> Help</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/FrontEnd/index.html"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                </ul>
+            </div>
         </div>
     </div>
 </nav>
 
-<h1>Client Dashboard</h1>
+<!-- Main Content -->
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="client-dashboard.html">
+                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-tasks me-2"></i> Tasks
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-file-signature me-2"></i> Proposals
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-credit-card me-2"></i> Payments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-users me-2"></i> Freelancers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-user-circle me-2"></i> My Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-sign-out me-2"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Client Dashboard</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button id="btn-new-task" type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                        <i class="fas fa-plus me-1"></i> New Task
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">My Tasks</h6>
+                                    <h3 class="mb-0">4</h3>
+                                </div>
+                                <div class="stat-icon bg-primary">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">Completed Tasks</h6>
+                                    <h3 class="mb-0">7</h3>
+                                </div>
+                                <div class="stat-icon bg-success">
+                                    <i class="fas fa-file-signature"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
