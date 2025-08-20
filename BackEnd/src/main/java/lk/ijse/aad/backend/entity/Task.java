@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
+@Table(name = "task")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,7 +30,7 @@ public class Task {
     private LocalDate deadline;
 
     @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "task_category_id", nullable = false)
     private TaskCategory taskCategory;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
