@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Data
@@ -26,6 +27,13 @@ public class Task {
     private TaskStatus status;  // OPEN, IN_PROGRESS, COMPLETED
 
     private LocalDate deadline;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    private TaskCategory taskCategory;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
+    private List<Proposal> proposals;
 
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
