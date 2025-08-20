@@ -75,7 +75,7 @@ public class TaskCategoryServiceImpl implements TaskCategoryService {
             }
 
             // Check if category has associated tasks
-            long taskCount = taskRepository.countByCategoryId(id);
+            long taskCount = taskRepository.countByTaskCategoryId(id);
             if (taskCount > 0) {
                 throw new RuntimeException("Cannot delete category with ID: " + categoryId +
                         ". It has " + taskCount + " associated tasks.");
@@ -140,7 +140,7 @@ public class TaskCategoryServiceImpl implements TaskCategoryService {
     @Override
     public long getTaskCountByCategory(Long categoryId) {
         try {
-            return taskRepository.countByCategoryId(categoryId);
+            return taskRepository.countByTaskCategoryId(categoryId);
         } catch (Exception e) {
             log.error("Error while getting task count for category: {}", categoryId, e);
             throw new RuntimeException("Failed to get task count: " + e.getMessage(), e);
@@ -149,7 +149,7 @@ public class TaskCategoryServiceImpl implements TaskCategoryService {
 
     private TaskCategoryDTO convertToDTOWithTaskCount(TaskCategory category) {
         TaskCategoryDTO dto = modelMapper.map(category, TaskCategoryDTO.class);
-        dto.setTaskCount((int) taskRepository.countByCategoryId(category.getId()));
+        dto.setTaskCount((int) taskRepository.countByTaskCategoryId(category.getId()));
         return dto;
     }
 
