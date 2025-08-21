@@ -135,6 +135,7 @@
                         <th>ID</th>
                         <th>Title</th>
                         <th>Description</th>
+                        <th>Category</th>
                         <th>Status</th>
                         <th>Deadline</th>
                         <th>Actions</th>
@@ -177,11 +178,6 @@
                         <label for="taskCategory" class="form-label">Category</label>
                         <select class="form-select" id="taskCategory" required>
                             <option value="">Select category</option>
-                            <option value="web-development">Web Development</option>
-                            <option value="graphic-design">Graphic Design</option>
-                            <option value="content-writing">Content Writing</option>
-                            <option value="mobile-app">Mobile App Development</option>
-                            <option value="marketing">Marketing</option>
                         </select>
                     </div>
                 </form>
@@ -194,11 +190,138 @@
     </div>
 </div>
 
+<!-- New Proposal Modal (for Freelancers) -->
+<div class="modal fade" id="proposalModal" tabindex="-1" aria-labelledby="proposalModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="proposalModalLabel">Submit Proposal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="proposalForm">
+                    <input type="hidden" id="proposalTaskId">
+                    <div class="mb-3">
+                        <label for="proposalCoverLetter" class="form-label">Cover Letter</label>
+                        <textarea class="form-control proposal-textarea" id="proposalCoverLetter" rows="4" required placeholder="Explain why you're the best fit for this task..."></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="proposalBid" class="form-label">Bid Amount (Rs)</label>
+                            <input type="number" class="form-control" id="proposalBid" min="1" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="proposalTimeline" class="form-label">Estimated Timeline (days)</label>
+                            <input type="number" class="form-control" id="proposalTimeline" min="1" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="proposalForm" class="btn btn-primary">Submit Proposal</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous">
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.js"></script>
+
+<script>
+    // Initialize the page based on user role
+    document.addEventListener('DOMContentLoaded', function() {
+        // Display user role in profile dropdown
+        document.getElementById('userRoleDisplay').textContent =
+            currentUser.role === 'FREELANCER' ? 'Freelancer' : 'Client';
+
+        // Adjust UI based on role
+        if (currentUser.role === 'FREELANCER') {
+            // Change page title for freelancers
+            document.getElementById('pageTitle').textContent = 'Available Tasks';
+
+            // Hide the "New Task" button for freelancers
+            document.getElementById('btn-new-task').style.display = 'none';
+        }
+
+        // Populate tasks table
+        populateTasksTable();
+
+        // Populate categories dropdown (for new task modal)
+        populateCategories();
+    });
+
+    // Function to populate tasks table
+    function populateTasksTable() {
+        const tableBody = document.getElementById('taskTableBody');
+        tableBody.innerHTML = '';
+
+        tasks.forEach(task => {
+            const row = document.createElement('tr');
+
+            // Determine status badge color
+            let statusClass = 'badge bg-secondary';
+            if (task.status === 'Open') statusClass = 'badge bg-success';
+            else if (task.status === 'In Progress') statusClass = 'badge bg-primary';
+            else if (task.status === 'Completed') statusClass = 'badge bg-info';
+
+            row.innerHTML = `
+                <td>${task.id}</td>
+                <td>${task.title}</td>
+                <td>${task.description}</td>
+                <td>${task.category}</td>
+                <td><span class="${statusClass}">${task.status}</span></td>
+                <td>${formatDate(task.deadline)}</td>
+                <td>
+                    ${renderActionButtons(task)}
+                </td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+
+        // Add event listeners to action buttons
+        addActionButtonListeners();
+    }
+
+    // Function to render appropriate action buttons based on user role
+    function renderActionButtons(task) {
+        if (currentUser.role === 'FREELANCER') {
+            // For freelancers, show a button to submit proposal
+            return `
+                <button class="btn btn-sm btn-outline-primary proposal-btn" data-task-id="${task.id}" title="Submit Proposal">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            `;
+        } else {
+            // For clients, show edit and delete options
+            return `
+                <button class="btn btn-sm btn-outline-secondary me-1">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+        }
+    }
+
+    // Function to add event listeners to action buttons
+    function addActionButtonListeners() {
+        if (currentUser.role === 'FREELANCER') {
+            // Add click event to proposal buttons
+            document.querySelectorAll('.proposal-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const taskId = this.getAttribute('data-task-id');
+                    openProposalModal(taskId);
+                });
+            });
+        }
+    }
+</script>
 
 </body>
 </html>

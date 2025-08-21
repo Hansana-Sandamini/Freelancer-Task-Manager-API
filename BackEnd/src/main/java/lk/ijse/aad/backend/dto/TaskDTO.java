@@ -16,4 +16,5 @@ public class TaskDTO {
     private String status;  // OPEN, IN_PROGRESS, COMPLETED
     private LocalDate deadline;
     private Long clientId;
+    private String taskCategoryName;
 }

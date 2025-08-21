@@ -2,8 +2,10 @@ package lk.ijse.aad.backend.service.impl;
 
 import lk.ijse.aad.backend.dto.TaskDTO;
 import lk.ijse.aad.backend.entity.Task;
+import lk.ijse.aad.backend.entity.TaskCategory;
 import lk.ijse.aad.backend.entity.TaskStatus;
 import lk.ijse.aad.backend.entity.User;
+import lk.ijse.aad.backend.repository.TaskCategoryRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.repository.UserRepository;
 import lk.ijse.aad.backend.service.TaskService;
@@ -22,6 +24,7 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final TaskCategoryRepository taskCategoryRepository;
     private final ModelMapper modelMapper;
 
     @Override
@@ -30,8 +33,13 @@ public class TaskServiceImpl implements TaskService {
             User client = userRepository.findById(taskDTO.getClientId())
                     .orElseThrow(() -> new RuntimeException("Client not found with ID: " + taskDTO.getClientId()));
 
+            // Find task category by name
+            TaskCategory taskCategory = taskCategoryRepository.findByName(taskDTO.getTaskCategoryName())
+                    .orElseThrow(() -> new RuntimeException("Task category not found: " + taskDTO.getTaskCategoryName()));
+
             Task task = modelMapper.map(taskDTO, Task.class);
             task.setClient(client);
+            task.setTaskCategory(taskCategory);
             task.setStatus(TaskStatus.OPEN);
 
             taskRepository.save(task);
@@ -53,6 +61,13 @@ public class TaskServiceImpl implements TaskService {
             existingTask.setTitle(taskDTO.getTitle());
             existingTask.setDescription(taskDTO.getDescription());
             existingTask.setDeadline(taskDTO.getDeadline());
+
+            // Update task category if provided
+            if (taskDTO.getTaskCategoryName() != null) {
+                TaskCategory taskCategory = taskCategoryRepository.findByName(taskDTO.getTaskCategoryName())
+                        .orElseThrow(() -> new RuntimeException("Task category not found: " + taskDTO.getTaskCategoryName()));
+                existingTask.setTaskCategory(taskCategory);
+            }
 
             // Convert string status to enum
             if (taskDTO.getStatus() != null) {
@@ -99,6 +114,7 @@ public class TaskServiceImpl implements TaskService {
         dto.setStatus(task.getStatus().name());
         dto.setDeadline(task.getDeadline());
         dto.setClientId(task.getClient().getId());
+        dto.setTaskCategoryName(task.getTaskCategory().getName());
         return dto;
     }
 
