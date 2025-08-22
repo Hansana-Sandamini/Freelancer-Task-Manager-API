@@ -47,4 +47,7 @@ public class Task {
     @OneToOne(mappedBy = "task")
     private Payment payment;
 
+    @OneToMany(mappedBy = "task")
+    private List<Notification> notifications;
+
 }

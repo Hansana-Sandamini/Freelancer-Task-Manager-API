@@ -41,4 +41,7 @@ public class User {
     @OneToMany(mappedBy = "freelancer")
     private List<Review> reviewsReceived;
 
+    @OneToMany(mappedBy = "user")
+    private List<Notification> notifications;
+
 }
