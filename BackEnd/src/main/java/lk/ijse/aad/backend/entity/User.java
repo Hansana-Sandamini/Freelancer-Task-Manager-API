@@ -3,6 +3,8 @@ package lk.ijse.aad.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "user")
 @Data
@@ -26,5 +28,11 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;  // ADMIN, FREELANCER, CLIENT
+
+    @OneToMany(mappedBy = "client")
+    private List<Payment> paymentsMade;
+
+    @OneToMany(mappedBy = "freelancer")
+    private List<Payment> paymentsReceived;
 
 }

@@ -44,4 +44,7 @@ public class Task {
     @JoinColumn(name = "freelancer_id")
     private User freelancer;
 
+    @OneToOne(mappedBy = "task")
+    private Payment payment;
+
 }
