@@ -35,4 +35,10 @@ public class User {
     @OneToMany(mappedBy = "freelancer")
     private List<Payment> paymentsReceived;
 
+    @OneToMany(mappedBy = "client")
+    private List<Review> reviewsGiven;
+
+    @OneToMany(mappedBy = "freelancer")
+    private List<Review> reviewsReceived;
+
 }
