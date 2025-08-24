@@ -1,4 +1,4 @@
-.navbar {
+#topbar {
     z-index: 1000;
 }
 
@@ -125,6 +125,12 @@ main {
 .task-meta div {
     display: flex;
     align-items: center;
+}
+
+#sidebar-admin,
+#sidebar-client,
+#sidebar-freelancer {
+    display: none;
 }
 
 /* Responsive adjustments */
