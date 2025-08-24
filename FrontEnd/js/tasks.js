@@ -1,9 +1,17 @@
 const API_BASE_URL = "http://localhost:8085/api/v1/tasks"; // backend endpoint
 const CATEGORY_API_URL = "http://localhost:8085/api/v1/task-categories"; // backend endpoint for categories
 
+const sidebar = document.getElementById(`sidebar-${role}`);
+const links = sidebar.querySelectorAll(".nav-link");
+links.forEach(link => {
+    if (link.href.includes("tasks.html")) {
+        link.classList.add("active");
+    }
+});
+
 let currentUser = {
-    id: localStorage.getItem("userId") || 1,
-    role: localStorage.getItem("userRole") || "CLIENT"  // CLIENT | FREELANCER | ADMIN
+    id: localStorage.getItem("userId") ,
+    role: localStorage.getItem("userRole")   // CLIENT | FREELANCER | ADMIN
 };
 
 let tasks = [];
