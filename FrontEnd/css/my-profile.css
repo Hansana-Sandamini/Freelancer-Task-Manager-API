@@ -1,0 +1,40 @@
+/* Profile Card */
+.card {
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+#profileImage {
+    border: 3px solid #4e73df;
+}
+
+/* Form Styling */
+#profileForm .form-label {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+#profileForm .form-control[readonly] {
+    background-color: #f8f9fa;
+}
+
+#editProfileBtn, #saveProfileBtn, #cancelEditBtn {
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 576px) {
+    #profileImage {
+        width: 100px;
+        height: 100px;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+}
