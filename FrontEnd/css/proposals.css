@@ -1,0 +1,60 @@
+/* Proposal Table */
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.table .badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+}
+
+.table .cover-letter {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Modal Styling */
+#proposalDetailsModal .modal-content {
+    border-radius: 12px;
+}
+
+#proposalDetailsModal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+#proposalDetailsModal .modal-body h6 {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+#proposalDetailsModal .modal-body p {
+    margin-bottom: 0;
+    font-size: 1rem;
+}
+
+#proposalDetailsModal .modal-body .form-control[readonly] {
+    background-color: #f8f9fa;
+}
+
+#acceptProposalBtn, #rejectProposalBtn, #editProposalBtn, #saveProposalBtn, #deleteProposalBtn {
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 576px) {
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+
+    .table .cover-letter {
+        max-width: 100px;
+    }
+
+    #proposalDetailsModal .modal-dialog {
+        margin: 0.5rem;
+    }
+}
