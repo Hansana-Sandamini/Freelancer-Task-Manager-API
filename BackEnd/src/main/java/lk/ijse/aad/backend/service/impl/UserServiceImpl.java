@@ -6,6 +6,7 @@ import lk.ijse.aad.backend.dto.RegisterDTO;
 import lk.ijse.aad.backend.entity.Role;
 import lk.ijse.aad.backend.entity.User;
 import lk.ijse.aad.backend.repository.UserRepository;
+import lk.ijse.aad.backend.service.EmailService;
 import lk.ijse.aad.backend.service.UserService;
 import lk.ijse.aad.backend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
 
     @Override
     public AuthResponseDTO authenticate(AuthDTO authDTO) {
@@ -76,6 +78,17 @@ public class UserServiceImpl implements UserService {
         // Save user to database
         userRepository.save(user);
         log.info("User registered successfully: {}", registerDTO.getEmail());
+
+        // Send welcome email
+        emailService.sendEmail(
+                registerDTO.getEmail(),
+                "Welcome to TaskFlow 🎉",
+                "<h2>Hello " + registerDTO.getName() + "!</h2>" +
+                        "<p>Thank you for joining TaskFlow. We're excited to have you on board!</p>" +
+                        "<p>Whether you're here to find work or hire talent, TaskFlow is your platform to connect and succeed.</p>" +
+                        "<p>Get started by logging in to your account and exploring our features.</p>" +
+                        "<p>Best regards,<br>The TaskFlow Team</p>"
+        );
 
         return "User registered successfully";
     }
