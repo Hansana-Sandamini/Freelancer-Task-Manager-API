@@ -3,6 +3,8 @@ package lk.ijse.aad.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "review")
 @Data
@@ -28,4 +30,11 @@ public class Review {
     @JoinColumn(name = "freelancer_id", nullable = false)
     private User freelancer;
 
+    @ManyToOne
+    @JoinColumn(name = "task_id", nullable = false)
+    private Task task;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 }

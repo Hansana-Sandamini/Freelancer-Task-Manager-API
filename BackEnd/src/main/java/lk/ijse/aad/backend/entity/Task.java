@@ -50,4 +50,7 @@ public class Task {
     @OneToMany(mappedBy = "task")
     private List<Notification> notifications;
 
+    @OneToMany(mappedBy = "task")
+    private List<Review> reviews;
+
 }

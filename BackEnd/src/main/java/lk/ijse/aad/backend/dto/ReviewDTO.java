@@ -15,4 +15,6 @@ public class ReviewDTO {
     private String clientName;
     private Long freelancerId;
     private String freelancerName;
+    private Long taskId;
+    private String taskTitle;
 }
