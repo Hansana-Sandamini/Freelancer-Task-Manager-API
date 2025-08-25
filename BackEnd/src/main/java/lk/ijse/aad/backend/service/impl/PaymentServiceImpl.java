@@ -15,7 +15,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,12 +40,14 @@ public class PaymentServiceImpl implements PaymentService {
             Task task = taskRepository.findById(paymentDTO.getTaskId())
                     .orElseThrow(() -> new RuntimeException("Task not found with ID: " + paymentDTO.getTaskId()));
 
-            Payment payment = modelMapper.map(paymentDTO, Payment.class);
-            payment.setClient(client);
-            payment.setFreelancer(freelancer);
-            payment.setTask(task);
-            payment.setPaymentDate(LocalDate.from(LocalDateTime.now()));
-            payment.setStatus(PaymentStatus.COMPLETED);
+            Payment payment = Payment.builder()
+                    .amount(paymentDTO.getAmount())
+                    .paymentDate(LocalDate.now())
+                    .status(PaymentStatus.COMPLETED)
+                    .client(client)
+                    .freelancer(freelancer)
+                    .task(task)
+                    .build();
 
             paymentRepository.save(payment);
             log.info("Payment saved successfully for task: {}", task.getTitle());
