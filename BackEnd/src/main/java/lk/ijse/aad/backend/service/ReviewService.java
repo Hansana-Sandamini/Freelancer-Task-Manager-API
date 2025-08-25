@@ -12,4 +12,6 @@ public interface ReviewService {
     List<ReviewDTO> getAllReviews();
     List<ReviewDTO> getReviewsByFreelancerId(Long freelancerId);
     List<ReviewDTO> getReviewsByTaskId(Long taskId);
+    List<ReviewDTO> getReviewsByClientId(Long clientId);
+    boolean hasClientReviewedTask(Long clientId, Long taskId);
 }
