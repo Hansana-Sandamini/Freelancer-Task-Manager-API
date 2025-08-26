@@ -108,6 +108,11 @@ if (signinForm) {
             localStorage.setItem("email", result.data.email);
             localStorage.setItem("role", result.data.role);
 
+            // Initialize profile fields
+            if (!localStorage.getItem('profile_bio')) localStorage.setItem('profile_bio', '');
+            if (!localStorage.getItem('profile_company')) localStorage.setItem('profile_company', '');
+            if (!localStorage.getItem('profile_skills')) localStorage.setItem('profile_skills', '');
+
             console.log("Logged in:", result);
 
             // Role-based redirection

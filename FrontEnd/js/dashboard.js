@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8085/api/v1/auth';
+const DASHBOARD_API_BASE = 'http://localhost:8085/api/v1/auth';
 
 // Redirect to sign-in page if not logged in
 if (!localStorage.getItem('token')) {
