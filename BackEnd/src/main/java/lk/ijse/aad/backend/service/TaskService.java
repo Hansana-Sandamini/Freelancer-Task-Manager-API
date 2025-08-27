@@ -9,4 +9,5 @@ public interface TaskService {
     void updateTask(TaskDTO taskDTO);
     void deleteTask(String taskId);
     List<TaskDTO> getAllTasks();
+    List<TaskDTO> getTasksByClientId(String clientId);
 }

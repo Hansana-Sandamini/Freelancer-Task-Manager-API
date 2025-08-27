@@ -1,202 +1,250 @@
-const API_BASE_URL = "http://localhost:8085/api/v1/tasks"; // backend endpoint
-const CATEGORY_API_URL = "http://localhost:8085/api/v1/task-categories"; // backend endpoint for categories
+const TASK_API_BASE = "http://localhost:8085/api/v1/tasks";
+const CATEGORY_API_URL = "http://localhost:8085/api/v1/task-categories";
 
-const sidebar = document.getElementById(`sidebar-${role}`);
-const links = sidebar.querySelectorAll(".nav-link");
-links.forEach(link => {
-    if (link.href.includes("tasks.html")) {
-        link.classList.add("active");
+// Get token, role, and email from localStorage
+const token = localStorage.getItem("token");
+const role = localStorage.getItem("role");
+const email = localStorage.getItem("email");
+
+const taskTableBody = document.getElementById("taskTableBody");
+const taskForm = document.getElementById("taskForm");
+
+// Helper function for API calls with JWT
+async function apiCall(url, method = "GET", body = null) {
+    const options = {
+        method,
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        }
+    };
+    if (body) options.body = JSON.stringify(body);
+
+    const response = await fetch(url, options);
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.data || "API Error");
+    return result.data;
+}
+
+// ===================== Initial Load =====================
+document.addEventListener('DOMContentLoaded', function() {
+    loadSidebarBasedOnRole();
+    populateCategories().then(loadTasks);
+
+    // Hide New-Task button for Admins and Freelancers
+    const newTaskButton = document.getElementById("btn-new-task");
+    if (role === "ADMIN" || role === "FREELANCER") {
+        newTaskButton.style.display = "none";
     }
 });
 
-let currentUser = {
-    id: localStorage.getItem("userId") ,
-    role: localStorage.getItem("userRole")   // CLIENT | FREELANCER | ADMIN
-};
-
-let tasks = [];
-
-document.addEventListener("DOMContentLoaded", () => {
-    loadTasks();
-    populateCategories();
-
-    // Attach event listener for creating task
-    const taskForm = document.getElementById("taskForm");
-    if (taskForm) {
-        taskForm.addEventListener("submit", createTask);
-    }
-});
-
-// Load all tasks
+// ===================== Load Tasks =====================
 async function loadTasks() {
     try {
-        const response = await fetch(API_BASE_URL, {
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            }
-        });
-
-        const result = await response.json();
-        tasks = result.data || [];
-        populateTasksTable();
+        let tasks = [];
+        if (role === "CLIENT") {
+            // fetch tasks for logged-in client
+            const userId = localStorage.getItem("userId");
+            tasks = await apiCall(`${TASK_API_BASE}/client/${userId}`);
+        } else {
+            // fetch all tasks for admins & freelancers
+            tasks = await apiCall(TASK_API_BASE);
+        }
+        renderTasks(tasks);
     } catch (error) {
-        console.error("Error loading tasks:", error);
+        console.error("Error loading tasks:", error.message);
     }
 }
 
-// Create Task
-async function createTask(e) {
-    e.preventDefault();
+// ===================== Render Tasks =====================
+function renderTasks(tasks) {
+    taskTableBody.innerHTML = "";
+    tasks.forEach(task => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${task.id}</td>
+            <td>${task.title}</td>
+            <td>${task.description}</td>
+            <td>${task.taskCategoryName}</td>
+            <td>${getStatusBadge(task.status)}</td>
+            <td>${task.deadline}</td>
+            <td>
+                ${role === "CLIENT" ? `<button class="btn btn-sm btn-warning" onclick="editTask(${task.id})">
+                        <i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})">
+                        <i class="fas fa-trash"></i></button>` : ""}
+                ${role === "ADMIN" ? `<button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})">
+                        <i class="fas fa-trash"></i></button>` : ""}
+                ${role === "FREELANCER" ? `<button class="btn btn-sm btn-outline-primary" onclick="openProposalModal(${task.id})">
+                    <i class="fas fa-paper-plane"></i> Propose</button>` : ""}
+            </td>
+        `;
+        taskTableBody.appendChild(tr);
+    });
+}
 
-    const newTask = {
-        title: document.getElementById("taskTitle").value,
-        description: document.getElementById("taskDescription").value,
-        deadline: document.getElementById("taskDeadline").value,
-        clientId: currentUser.id,
-        taskCategoryName: document.getElementById("taskCategory").value
-    };
-
-    try {
-        const response = await fetch(API_BASE_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            },
-            body: JSON.stringify(newTask)
-        });
-
-        const result = await response.json();
-        if (result.code === 201) {
+// ===================== Create Task =====================
+if (taskForm) {
+    taskForm.addEventListener("submit", async e => {
+        e.preventDefault();
+        try {
+            const newTask = {
+                title: document.getElementById("taskTitle").value,
+                description: document.getElementById("taskDescription").value,
+                deadline: document.getElementById("taskDeadline").value,
+                taskCategoryName: document.getElementById("taskCategory").value,
+                clientId: Number(localStorage.getItem("userId"))
+            };
+            await apiCall(TASK_API_BASE, "POST", newTask);
             alert("Task created successfully!");
-            document.getElementById("taskForm").reset();
+            taskForm.reset();
             bootstrap.Modal.getInstance(document.getElementById("newTaskModal")).hide();
             loadTasks();
-        } else {
-            alert("Failed: " + result.message);
+        } catch (error) {
+            console.error("Error creating task:", error.message);
         }
-    } catch (error) {
-        console.error("Error creating task:", error);
-    }
+    });
 }
 
-// Delete Task
+// ===================== Delete Task =====================
 async function deleteTask(taskId) {
     if (!confirm("Are you sure you want to delete this task?")) return;
-
     try {
-        const response = await fetch(`${API_BASE_URL}/${taskId}`, {
-            method: "DELETE",
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            }
-        });
-
-        const result = await response.json();
-        if (result.code === 200) {
-            alert("Task deleted successfully!");
-            loadTasks();
-        } else {
-            alert("Failed: " + result.message);
-        }
+        await apiCall(`${TASK_API_BASE}/${taskId}`, "DELETE");
+        alert("Task deleted successfully!");
+        loadTasks();
     } catch (error) {
-        console.error("Error deleting task:", error);
+        console.error("Error deleting task:", error.message);
     }
 }
 
-// Populate Categories
+// ===================== Edit Task =====================
+async function editTask(taskId) {
+    const task = await apiCall(`${TASK_API_BASE}/${taskId}`);
+    if (!task) return alert("Task not found");
+
+    await populateCategories();  // categories loaded first
+
+    document.getElementById("editTaskId").value = task.id;
+    document.getElementById("editTaskTitle").value = task.title;
+    document.getElementById("editTaskDescription").value = task.description;
+    document.getElementById("editTaskDeadline").value = task.deadline;
+    document.getElementById("editTaskCategory").value = task.taskCategoryName;
+
+    const modal = new bootstrap.Modal(document.getElementById("editTaskModal"));
+    modal.show();
+}
+
+// Handle form submit
+document.getElementById("editTaskForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    try {
+        const taskId = document.getElementById("editTaskId").value;
+
+        const updatedTask = {
+            id: taskId,
+            title: document.getElementById("editTaskTitle").value,
+            description: document.getElementById("editTaskDescription").value,
+            deadline: document.getElementById("editTaskDeadline").value,
+            taskCategoryName: document.getElementById("editTaskCategory").value,
+            clientId: Number(localStorage.getItem("userId"))
+        };
+
+        await apiCall(`${TASK_API_BASE}/${taskId}`, "PUT", updatedTask);
+
+        alert("Task updated successfully!");
+        bootstrap.Modal.getInstance(document.getElementById("editTaskModal")).hide();
+        loadTasks();
+    } catch (error) {
+        console.error("Error updating task:", error.message);
+    }
+});
+
+// Function to load sidebar based on role
+function loadSidebarBasedOnRole() {
+    const role = localStorage.getItem('role');
+    const adminSidebar = document.getElementById('sidebar-admin');
+    const clientSidebar = document.getElementById('sidebar-client');
+    const freelancerSidebar = document.getElementById('sidebar-freelancer');
+
+    // Hide all sidebars first
+    if (adminSidebar) adminSidebar.style.display = 'none';
+    if (clientSidebar) clientSidebar.style.display = 'none';
+    if (freelancerSidebar) freelancerSidebar.style.display = 'none';
+
+    // Show appropriate sidebar
+    switch(role) {
+        case 'ADMIN':
+            if (adminSidebar) adminSidebar.style.display = 'block';
+            break;
+        case 'CLIENT':
+            if (clientSidebar) clientSidebar.style.display = 'block';
+            break;
+        case 'FREELANCER':
+            if (freelancerSidebar) freelancerSidebar.style.display = 'block';
+            break;
+        default:
+            console.error('Unknown role:', role);
+    }
+}
+
+// =================== Populate Categories ===================
 async function populateCategories() {
     try {
         const response = await fetch(CATEGORY_API_URL, {
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            }
+            headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
         });
 
         const result = await response.json();
         const categories = result.data || [];
 
-        const select = document.getElementById("taskCategory");
-        if (!select) return;
+        // === For Create Task Modal ===
+        const selectCreate = document.getElementById("taskCategory");
+        if (selectCreate) {
+            selectCreate.innerHTML = '<option value="">Select category</option>';
+            categories.forEach(cat => {
+                const option = document.createElement("option");
+                option.value = cat.name;
+                option.textContent = cat.name;
+                selectCreate.appendChild(option);
+            });
+        }
 
-        select.innerHTML = '<option value="">Select category</option>';
-        categories.forEach(cat => {
-            const option = document.createElement("option");
-            option.value = cat.name;
-            option.textContent = cat.name;
-            select.appendChild(option);
-        });
+        // === For Edit Task Modal ===
+        const selectEdit = document.getElementById("editTaskCategory");
+        if (selectEdit) {
+            selectEdit.innerHTML = '<option value="">Select category</option>';
+            categories.forEach(cat => {
+                const option = document.createElement("option");
+                option.value = cat.name;
+                option.textContent = cat.name;
+                selectEdit.appendChild(option);
+            });
+        }
+
     } catch (error) {
         console.error("Error loading categories:", error);
+        alert("Error loading categories: " + error.message);
     }
 }
 
-// Populate Tasks Table
-function populateTasksTable() {
-    const tableBody = document.getElementById("taskTableBody");
-    if (!tableBody) return;
-
-    tableBody.innerHTML = "";
-
-    tasks.forEach(task => {
-        const row = document.createElement("tr");
-
-        // Status badge color
-        let statusClass = "badge bg-secondary";
-        if (task.status === "OPEN") statusClass = "badge bg-success";
-        else if (task.status === "IN_PROGRESS") statusClass = "badge bg-primary";
-        else if (task.status === "COMPLETED") statusClass = "badge bg-info";
-
-        row.innerHTML = `
-            <td>${task.id}</td>
-            <td>${task.title}</td>
-            <td>${task.description}</td>
-            <td>${task.taskCategoryName}</td>
-            <td><span class="${statusClass}">${task.status}</span></td>
-            <td>${formatDate(task.deadline)}</td>
-            <td>${renderActionButtons(task)}</td>
-        `;
-
-        tableBody.appendChild(row);
-    });
-}
-
-// Render appropriate action buttons based on user role
-function renderActionButtons(task) {
-    if (currentUser.role === "FREELANCER") {
-        return `
-            <button class="btn btn-sm btn-outline-primary" onclick="openProposalModal(${task.id})">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        `;
-    } else if (currentUser.role === "CLIENT") {
-        return `
-            <button class="btn btn-sm btn-outline-secondary me-1" onclick="editTask(${task.id})">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteTask(${task.id})">
-                <i class="fas fa-trash"></i>
-            </button>
-        `;
+// Status Badges
+function getStatusBadge(status) {
+    switch (status) {
+        case "OPEN":
+            return `<span class="badge bg-warning text-dark">OPEN</span>`;
+        case "IN_PROGRESS":
+            return `<span class="badge bg-info text-dark">IN PROGRESS</span>`;
+        case "COMPLETED":
+            return `<span class="badge bg-success">COMPLETED</span>`;
+        default:
+            return `<span class="badge bg-secondary">${status}</span>`;
     }
-    return "";
 }
 
-// Helpers
-function formatDate(dateStr) {
-    if (!dateStr) return "-";
-    const date = new Date(dateStr);
-    return date.toISOString().split("T")[0]; // yyyy-mm-dd
-}
-
-// Placeholder -> open proposal modal
+// ===================== Freelancer Proposal =====================
 function openProposalModal(taskId) {
     document.getElementById("proposalTaskId").value = taskId;
     const modal = new bootstrap.Modal(document.getElementById("proposalModal"));
     modal.show();
-}
-
-// Placeholder -> edit task (you can implement modal form prefill here)
-function editTask(taskId) {
-    alert("Edit task " + taskId + " (to be implemented)");
 }
