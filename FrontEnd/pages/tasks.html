@@ -330,21 +330,24 @@
             </div>
             <div class="modal-body">
                 <form id="proposalForm">
+                    <!-- Hidden task id -->
                     <input type="hidden" id="proposalTaskId">
+
+                    <!-- Cover Letter -->
                     <div class="mb-3">
                         <label for="proposalCoverLetter" class="form-label">Cover Letter</label>
-                        <textarea class="form-control proposal-textarea" id="proposalCoverLetter" rows="4" required placeholder="Explain why you're the best fit for this task..."></textarea>
+                        <textarea class="form-control proposal-textarea" id="proposalCoverLetter" rows="4" required
+                                  placeholder="Explain why you're the best fit for this task..."></textarea>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="proposalBid" class="form-label">Bid Amount (Rs)</label>
-                            <input type="number" class="form-control" id="proposalBid" min="1" step="0.01" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="proposalTimeline" class="form-label">Estimated Timeline (days)</label>
-                            <input type="number" class="form-control" id="proposalTimeline" min="1" required>
-                        </div>
+
+                    <!-- Bid Amount -->
+                    <div class="mb-3">
+                        <label for="proposalBid" class="form-label">Bid Amount (Rs)</label>
+                        <input type="number" class="form-control" id="proposalBid" min="1" step="0.01" required>
                     </div>
+
+                    <!-- Status field (hidden -> PENDING) -->
+                    <input type="hidden" id="proposalStatus" value="PENDING">
                 </form>
             </div>
             <div class="modal-footer">
