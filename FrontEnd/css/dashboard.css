@@ -99,7 +99,9 @@ main {
 .stat-icon.bg-info { background-color: #17a2b8; }
 .stat-icon.bg-danger { background-color: #dc3545; }
 
-#btn-new-task {
+#btn-new-task,
+#btn-new-user,
+#btn-new-task-category {
     font-size: 1.2rem;
     border-radius: 10px;
 }

@@ -1,15 +1,15 @@
 const CATEGORY_API_BASE = "http://localhost:8085/api/v1/task-categories";
 
 const taskCategoryTableBody = document.getElementById("taskCategoryTableBody");
-const taskForm = document.getElementById("taskForm");
-const taskTitle = document.getElementById("taskTitle");
-const taskDescription = document.getElementById("taskDescription");
+const taskCategoryForm = document.getElementById("taskCategoryForm");
+const taskCategoryName = document.getElementById("taskCategoryName");
+const taskCategoryDescription = document.getElementById("taskCategoryDescription");
 
 // Edit form elements
-const editTaskForm = document.getElementById("editTaskForm");
+const editTaskCategoryForm = document.getElementById("editTaskCategoryForm");
 const editCategoryId = document.getElementById("editCategoryId");
-const editTaskTitle = document.getElementById("editTaskTitle");
-const editTaskDescription = document.getElementById("editTaskDescription");
+const editTaskCategoryName = document.getElementById("editTaskCategoryName");
+const editTaskCategoryDescription = document.getElementById("editTaskCategoryDescription");
 
 // Load all categories on page load
 document.addEventListener("DOMContentLoaded", () => {
@@ -63,12 +63,12 @@ function renderTable(categories) {
 }
 
 // ==================== Add New Category ====================
-taskForm.addEventListener("submit", async (e) => {
+taskCategoryForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const newCategory = {
-        name: taskTitle.value,
-        description: taskDescription.value
+        name: taskCategoryName.value,
+        description: taskCategoryDescription.value
     };
 
     try {
@@ -85,7 +85,7 @@ taskForm.addEventListener("submit", async (e) => {
 
         if (data.code === 201) {
             loadTaskCategories();
-            taskForm.reset();
+            taskCategoryForm.reset();
             bootstrap.Modal.getInstance(document.getElementById("newTaskCategoryModal")).hide();
             alert("Category added successfully!");
         } else {
@@ -112,8 +112,8 @@ async function openEditModal(id) {
         if (data.code === 200) {
             const category = data.data;
             editCategoryId.value = category.id;
-            editTaskTitle.value = category.name;
-            editTaskDescription.value = category.description;
+            editTaskCategoryName.value = category.name;
+            editTaskCategoryDescription.value = category.description;
 
             // Show the modal
             const editModal = new bootstrap.Modal(document.getElementById('editTaskCategoryModal'));
@@ -128,13 +128,13 @@ async function openEditModal(id) {
 }
 
 // ==================== Update Category ====================
-editTaskForm.addEventListener("submit", async (e) => {
+editTaskCategoryForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const updatedCategory = {
         id: editCategoryId.value,
-        name: editTaskTitle.value,
-        description: editTaskDescription.value
+        name: editTaskCategoryName.value,
+        description: editTaskCategoryDescription.value
     };
 
     try {
