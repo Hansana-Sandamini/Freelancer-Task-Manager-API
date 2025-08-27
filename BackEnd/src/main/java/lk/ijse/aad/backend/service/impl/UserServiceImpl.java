@@ -77,6 +77,44 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public List<UserDTO> getFreelancers() {
+        try {
+            log.info("Fetching all freelancers");
+            return userRepository.findAll().stream()
+                    .filter(user -> user.getRole() == Role.FREELANCER)
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error while fetching freelancers", e);
+            throw new RuntimeException("Failed to fetch freelancers: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public UserDTO getUserById(Long id) {
+        try {
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+            return convertToDTO(user);
+        } catch (Exception e) {
+            log.error("Error fetching user with ID: {}", id, e);
+            throw new RuntimeException("Failed to fetch user: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public UserDTO getFreelancerById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Freelancer not found with ID: " + id));
+
+        if (user.getRole() != Role.FREELANCER) {
+            throw new RuntimeException("User is not a freelancer");
+        }
+
+        return convertToDTO(user);
+    }
+
     private UserDTO convertToDTO(User user) {
         try {
             UserDTO userDTO = modelMapper.map(user, UserDTO.class);

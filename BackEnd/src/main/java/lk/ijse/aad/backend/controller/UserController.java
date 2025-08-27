@@ -68,4 +68,31 @@ public class UserController {
         ));
     }
 
+    @GetMapping("/freelancers")
+    @PreAuthorize("hasAnyRole('CLIENT')")
+    public ResponseEntity<ApiResponse> getAllFreelancers() {
+        List<UserDTO> freelancers = userService.getFreelancers();
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Freelancers Retrieved Successfully",
+                freelancers
+        ));
+    }
+
+    @GetMapping("/freelancers/{id}")
+    @PreAuthorize("hasAnyRole('CLIENT')")
+    public ResponseEntity<ApiResponse> getFreelancerById(@PathVariable Long id) {
+        try {
+            UserDTO freelancer = userService.getFreelancerById(id);
+            return ResponseEntity.ok(new ApiResponse(
+                    200,
+                    "Freelancer retrieved successfully",
+                    freelancer
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404)
+                    .body(new ApiResponse(404, e.getMessage(), null));
+        }
+    }
+
 }
