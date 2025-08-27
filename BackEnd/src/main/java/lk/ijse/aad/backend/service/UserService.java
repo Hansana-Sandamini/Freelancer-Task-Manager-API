@@ -1,10 +1,11 @@
 package lk.ijse.aad.backend.service;
 
-import lk.ijse.aad.backend.dto.AuthDTO;
-import lk.ijse.aad.backend.dto.AuthResponseDTO;
-import lk.ijse.aad.backend.dto.RegisterDTO;
+import lk.ijse.aad.backend.dto.UserDTO;
+
+import java.util.List;
 
 public interface UserService {
-    AuthResponseDTO authenticate(AuthDTO authDTO);
-    String register(RegisterDTO registerDTO);
+    List<UserDTO> getAllUsers();
+    void updateUser(UserDTO userDTO);
+    void deleteUser(Long id);
 }

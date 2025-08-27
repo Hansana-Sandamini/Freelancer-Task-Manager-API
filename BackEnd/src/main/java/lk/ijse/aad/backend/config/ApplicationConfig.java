@@ -1,6 +1,6 @@
 package lk.ijse.aad.backend.config;
 
-import lk.ijse.aad.backend.repository.UserRepository;
+import lk.ijse.aad.backend.repository.AuthRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,11 +16,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ApplicationConfig {
 
-    private final UserRepository userRepository;
+    private final AuthRepository authRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return email -> userRepository.findByEmail(email)
+        return email -> authRepository.findByEmail(email)
                 .map(user -> new org.springframework.security.core.userdetails.User(
                         user.getEmail(),
                         user.getPassword(),

@@ -4,7 +4,7 @@ import lk.ijse.aad.backend.dto.ProposalDTO;
 import lk.ijse.aad.backend.entity.*;
 import lk.ijse.aad.backend.repository.ProposalRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
-import lk.ijse.aad.backend.repository.UserRepository;
+import lk.ijse.aad.backend.repository.AuthRepository;
 import lk.ijse.aad.backend.service.ProposalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,14 +21,14 @@ import java.util.stream.Collectors;
 public class ProposalServiceImpl implements ProposalService {
 
     private final ProposalRepository proposalRepository;
-    private final UserRepository userRepository;
+    private final AuthRepository authRepository;
     private final TaskRepository taskRepository;
     private final ModelMapper modelMapper;
 
     @Override
     public void saveProposal(ProposalDTO proposalDTO) {
         try {
-            User freelancer = userRepository.findById(proposalDTO.getFreelancerId())
+            User freelancer = authRepository.findById(proposalDTO.getFreelancerId())
                     .orElseThrow(() -> new RuntimeException("Freelancer not found with ID: " + proposalDTO.getFreelancerId()));
 
             Task task = taskRepository.findById(proposalDTO.getTaskId())
