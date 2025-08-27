@@ -10,4 +10,5 @@ public interface TaskService {
     void deleteTask(String taskId);
     List<TaskDTO> getAllTasks();
     List<TaskDTO> getTasksByClientId(String clientId);
+    List<String> getAllFreelancerEmails();
 }

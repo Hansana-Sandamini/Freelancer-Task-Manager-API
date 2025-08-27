@@ -1,7 +1,8 @@
 const TASK_API_BASE = "http://localhost:8085/api/v1/tasks";
 const CATEGORY_API_URL = "http://localhost:8085/api/v1/task-categories";
+const PROPOSAL_API_URL = "http://localhost:8085/api/v1/proposals";
 
-// Get token, role, and email from localStorage
+// Get token, role and email from localStorage
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
 const email = localStorage.getItem("email");
@@ -43,24 +44,60 @@ async function loadTasks() {
     try {
         let tasks = [];
         if (role === "CLIENT") {
-            // fetch tasks for logged-in client
             const userId = localStorage.getItem("userId");
             tasks = await apiCall(`${TASK_API_BASE}/client/${userId}`);
         } else {
-            // fetch all tasks for admins & freelancers
             tasks = await apiCall(TASK_API_BASE);
         }
-        renderTasks(tasks);
+
+        let freelancerProposals = [];
+        if (role === "FREELANCER") {
+            const userId = Number(localStorage.getItem("userId"));
+            freelancerProposals = await apiCall(`${PROPOSAL_API_URL}/freelancer/${userId}`);
+        }
+
+        renderTasks(tasks, freelancerProposals);
     } catch (error) {
         console.error("Error loading tasks:", error.message);
     }
 }
 
 // ===================== Render Tasks =====================
-function renderTasks(tasks) {
+function renderTasks(tasks, freelancerProposals = []) {
     taskTableBody.innerHTML = "";
+
     tasks.forEach(task => {
         const tr = document.createElement("tr");
+
+        let actionButtons = "";
+
+        if (role === "CLIENT") {
+            actionButtons = `
+                <button class="btn btn-sm btn-warning" onclick="editTask(${task.id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+        } else if (role === "ADMIN") {
+            actionButtons = `
+                <button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+        } else if (role === "FREELANCER") {
+            // Check if a proposal exists for this task
+            const hasProposed = freelancerProposals.some(p => p.taskId === task.id);
+
+            if (hasProposed) {
+                actionButtons = `<span class="badge bg-success">Proposal Sent</span>`;
+            } else {
+                actionButtons = `<button class="btn btn-sm btn-outline-primary" onclick="openProposalModal(${task.id})">
+                    <i class="fas fa-paper-plane"></i> Propose</button>`;
+            }
+        }
+
         tr.innerHTML = `
             <td>${task.id}</td>
             <td>${task.title}</td>
@@ -68,17 +105,9 @@ function renderTasks(tasks) {
             <td>${task.taskCategoryName}</td>
             <td>${getStatusBadge(task.status)}</td>
             <td>${task.deadline}</td>
-            <td>
-                ${role === "CLIENT" ? `<button class="btn btn-sm btn-warning" onclick="editTask(${task.id})">
-                        <i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})">
-                        <i class="fas fa-trash"></i></button>` : ""}
-                ${role === "ADMIN" ? `<button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})">
-                        <i class="fas fa-trash"></i></button>` : ""}
-                ${role === "FREELANCER" ? `<button class="btn btn-sm btn-outline-primary" onclick="openProposalModal(${task.id})">
-                    <i class="fas fa-paper-plane"></i> Propose</button>` : ""}
-            </td>
+            <td>${actionButtons}</td>
         `;
+
         taskTableBody.appendChild(tr);
     });
 }
@@ -228,7 +257,7 @@ async function populateCategories() {
     }
 }
 
-// Status Badges
+// ===================== Status Badges =====================
 function getStatusBadge(status) {
     switch (status) {
         case "OPEN":
@@ -247,4 +276,37 @@ function openProposalModal(taskId) {
     document.getElementById("proposalTaskId").value = taskId;
     const modal = new bootstrap.Modal(document.getElementById("proposalModal"));
     modal.show();
+}
+
+// ===================== Proposal Submission =====================
+const proposalForm = document.getElementById("proposalForm");
+
+if (proposalForm) {
+    proposalForm.addEventListener("submit", async e => {
+        e.preventDefault();
+
+        try {
+            const proposalData = {
+                coverLetter: document.getElementById("proposalCoverLetter").value,
+                bidAmount: parseFloat(document.getElementById("proposalBid").value),
+                status: document.getElementById("proposalStatus").value,  // PENDING
+                taskId: Number(document.getElementById("proposalTaskId").value),
+                freelancerId: Number(localStorage.getItem("userId"))
+            };
+
+            // Send proposal to backend
+            await apiCall(PROPOSAL_API_URL, "POST", proposalData);
+
+            alert("Proposal submitted successfully!");
+            proposalForm.reset();
+            bootstrap.Modal.getInstance(document.getElementById("proposalModal")).hide();
+
+            // Refresh task list so button changes
+            loadTasks();
+
+        } catch (error) {
+            console.error("Error submitting proposal:", error.message);
+            alert("Failed to submit proposal: " + error.message);
+        }
+    });
 }

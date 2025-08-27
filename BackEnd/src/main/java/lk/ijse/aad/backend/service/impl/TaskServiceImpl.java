@@ -1,13 +1,11 @@
 package lk.ijse.aad.backend.service.impl;
 
 import lk.ijse.aad.backend.dto.TaskDTO;
-import lk.ijse.aad.backend.entity.Task;
-import lk.ijse.aad.backend.entity.TaskCategory;
-import lk.ijse.aad.backend.entity.TaskStatus;
-import lk.ijse.aad.backend.entity.User;
+import lk.ijse.aad.backend.entity.*;
 import lk.ijse.aad.backend.repository.TaskCategoryRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.repository.AuthRepository;
+import lk.ijse.aad.backend.repository.UserRepository;
 import lk.ijse.aad.backend.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +22,7 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final AuthRepository authRepository;
+    private final UserRepository userRepository;
     private final TaskCategoryRepository taskCategoryRepository;
     private final ModelMapper modelMapper;
 
@@ -110,6 +109,14 @@ public class TaskServiceImpl implements TaskService {
     public List<TaskDTO> getTasksByClientId(String clientId) {
         return taskRepository.findByClientId(Long.valueOf(clientId)).stream()
                 .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<String> getAllFreelancerEmails() {
+        return userRepository.findByRole(Role.valueOf("FREELANCER"))
+                .stream()
+                .map(User::getEmail)
                 .collect(Collectors.toList());
     }
 
