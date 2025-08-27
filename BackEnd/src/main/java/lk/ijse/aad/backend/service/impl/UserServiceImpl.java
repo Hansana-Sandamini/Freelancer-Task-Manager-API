@@ -1,23 +1,18 @@
 package lk.ijse.aad.backend.service.impl;
 
-import lk.ijse.aad.backend.dto.AuthDTO;
-import lk.ijse.aad.backend.dto.AuthResponseDTO;
-import lk.ijse.aad.backend.dto.RegisterDTO;
+import lk.ijse.aad.backend.dto.UserDTO;
 import lk.ijse.aad.backend.entity.Role;
 import lk.ijse.aad.backend.entity.User;
 import lk.ijse.aad.backend.repository.UserRepository;
-import lk.ijse.aad.backend.service.EmailService;
 import lk.ijse.aad.backend.service.UserService;
-import lk.ijse.aad.backend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,71 +21,72 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final AuthenticationManager authenticationManager;
-    private final EmailService emailService;
+    private final ModelMapper modelMapper;
 
     @Override
-    public AuthResponseDTO authenticate(AuthDTO authDTO) {
-
-        // Let Spring Security handle authentication
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        authDTO.getEmail(),
-                        authDTO.getPassword()
-                )
-        );
-
-        if (authentication.isAuthenticated()) {
-            // Get User from DB
-            User user = userRepository.findByEmail(authDTO.getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-            // Generate tokens
-            String accessToken = jwtUtil.generateToken(user.getEmail());
-
-            return new AuthResponseDTO(
-                    accessToken,
-                    user.getRole().name()
-            );
-        } else {
-            throw new BadCredentialsException("Invalid credentials");
+    public List<UserDTO> getAllUsers() {
+        try {
+            log.info("Fetching all users");
+            return userRepository.findAll().stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error while fetching all users", e);
+            throw new RuntimeException("Failed to fetch users: " + e.getMessage(), e);
         }
     }
 
     @Override
-    public String register(RegisterDTO registerDTO) {
+    public void updateUser(UserDTO userDTO) {
+        try {
+            Long id = Long.parseLong(userDTO.getId());
+            User existingUser = userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
 
-        // Check if Email already exists
-        if (userRepository.existsByEmail(registerDTO.getEmail())) {
-            log.warn("Registration attempt with existing email: {}", registerDTO.getEmail());
-            throw new RuntimeException("Email already exists");
+            // Update fields
+            existingUser.setName(userDTO.getName());
+            existingUser.setEmail(userDTO.getEmail());
+            if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+                existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+            }
+            if (userDTO.getRole() != null) {
+                existingUser.setRole(Role.valueOf(userDTO.getRole()));
+            }
+
+            userRepository.save(existingUser);
+            log.info("User updated successfully: {}", userDTO.getEmail());
+
+        } catch (Exception e) {
+            log.error("Error while updating user: {}", userDTO.getEmail(), e);
+            throw new RuntimeException("Failed to update user: " + e.getMessage(), e);
         }
+    }
 
-        // Create new user entity
-        User user = User.builder()
-                .email(registerDTO.getEmail())
-                .password(passwordEncoder.encode(registerDTO.getPassword()))
-                .name(registerDTO.getName())
-                .role(Role.valueOf(registerDTO.getRole()))
-                .build();
+    @Override
+    public void deleteUser(Long id) {
+        try {
+            if (!userRepository.existsById(id)) {
+                throw new RuntimeException("User not found with ID: " + id);
+            }
+            userRepository.deleteById(id);
+            log.info("User deleted successfully: {}", id);
 
-        // Save user to database
-        userRepository.save(user);
-        log.info("User registered successfully: {}", registerDTO.getEmail());
+        } catch (Exception e) {
+            log.error("Error while deleting user: {}", id, e);
+            throw new RuntimeException("Failed to delete user: " + e.getMessage(), e);
+        }
+    }
 
-        // Send welcome email
-        emailService.sendEmail(
-                registerDTO.getEmail(),
-                "Welcome to TaskFlow 🎉",
-                "<h2>Hello " + registerDTO.getName() + "!</h2>" +
-                        "<p>Thank you for joining TaskFlow. We're excited to have you on board!</p>" +
-                        "<p>Whether you're here to find work or hire talent, TaskFlow is your platform to connect and succeed.</p>" +
-                        "<p>Get started by logging in to your account and exploring our features.</p>" +
-                        "<p>Best regards,<br>The TaskFlow Team</p>"
-        );
-
-        return "User registered successfully";
+    private UserDTO convertToDTO(User user) {
+        try {
+            UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+            userDTO.setId(String.valueOf(user.getId()));
+            userDTO.setRole(user.getRole().name());
+            return userDTO;
+        } catch (Exception e) {
+            log.error("Error while converting user to DTO: {}", user.getEmail(), e);
+            throw new RuntimeException("Failed to convert user to DTO: " + e.getMessage(), e);
+        }
     }
 
 }

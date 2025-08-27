@@ -5,7 +5,7 @@ import lk.ijse.aad.backend.entity.Notification;
 import lk.ijse.aad.backend.entity.NotificationType;
 import lk.ijse.aad.backend.entity.User;
 import lk.ijse.aad.backend.repository.NotificationRepository;
-import lk.ijse.aad.backend.repository.UserRepository;
+import lk.ijse.aad.backend.repository.AuthRepository;
 import lk.ijse.aad.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,13 +22,13 @@ import java.util.stream.Collectors;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final UserRepository userRepository;
+    private final AuthRepository authRepository;
     private final ModelMapper modelMapper;
 
     @Override
     public void saveNotification(NotificationDTO notificationDTO) {
         try {
-            User user = userRepository.findById(notificationDTO.getUserId())
+            User user = authRepository.findById(notificationDTO.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found with ID: " + notificationDTO.getUserId()));
 
             Notification notification = modelMapper.map(notificationDTO, Notification.class);
@@ -110,7 +110,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public List<NotificationDTO> getNotificationsByUserId(Long userId) {
         try {
-            if (!userRepository.existsById(userId)) {
+            if (!authRepository.existsById(userId)) {
                 throw new RuntimeException("User not found with ID: " + userId);
             }
 
@@ -127,7 +127,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public List<NotificationDTO> getUnreadNotificationsByUserId(Long userId) {
         try {
-            if (!userRepository.existsById(userId)) {
+            if (!authRepository.existsById(userId)) {
                 throw new RuntimeException("User not found with ID: " + userId);
             }
 

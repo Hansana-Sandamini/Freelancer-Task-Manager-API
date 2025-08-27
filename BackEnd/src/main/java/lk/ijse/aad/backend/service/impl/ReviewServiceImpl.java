@@ -6,7 +6,7 @@ import lk.ijse.aad.backend.entity.Task;
 import lk.ijse.aad.backend.entity.User;
 import lk.ijse.aad.backend.repository.ReviewRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
-import lk.ijse.aad.backend.repository.UserRepository;
+import lk.ijse.aad.backend.repository.AuthRepository;
 import lk.ijse.aad.backend.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final UserRepository userRepository;
+    private final AuthRepository authRepository;
     private final TaskRepository taskRepository;
     private final ModelMapper modelMapper;
 
@@ -31,11 +31,11 @@ public class ReviewServiceImpl implements ReviewService {
     public void saveReview(ReviewDTO reviewDTO) {
         try {
             // Validate that the client exists
-            User client = userRepository.findById(reviewDTO.getClientId())
+            User client = authRepository.findById(reviewDTO.getClientId())
                     .orElseThrow(() -> new RuntimeException("Client not found with ID: " + reviewDTO.getClientId()));
 
             // Validate that the freelancer exists
-            User freelancer = userRepository.findById(reviewDTO.getFreelancerId())
+            User freelancer = authRepository.findById(reviewDTO.getFreelancerId())
                     .orElseThrow(() -> new RuntimeException("Freelancer not found with ID: " + reviewDTO.getFreelancerId()));
 
             // Validate that the task exists

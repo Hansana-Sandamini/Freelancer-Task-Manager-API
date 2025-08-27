@@ -3,7 +3,7 @@ package lk.ijse.aad.backend.controller;
 import lk.ijse.aad.backend.dto.ApiResponse;
 import lk.ijse.aad.backend.dto.AuthDTO;
 import lk.ijse.aad.backend.dto.RegisterDTO;
-import lk.ijse.aad.backend.service.UserService;
+import lk.ijse.aad.backend.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 public class AuthController {
 
-    private final UserService userService;
+    private final AuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> register(@RequestBody RegisterDTO registerDTO){
         return ResponseEntity.ok(new ApiResponse(
                 201,
                 "User Registered Successfully",
-                userService.register(registerDTO))
+                authService.register(registerDTO))
         );
     }
 
@@ -30,7 +30,7 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse(
                 200,
                 "Login Successful",
-                userService.authenticate(authDTO))
+                authService.authenticate(authDTO))
         );
     }
 

@@ -7,7 +7,7 @@ import lk.ijse.aad.backend.entity.TaskStatus;
 import lk.ijse.aad.backend.entity.User;
 import lk.ijse.aad.backend.repository.TaskCategoryRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
-import lk.ijse.aad.backend.repository.UserRepository;
+import lk.ijse.aad.backend.repository.AuthRepository;
 import lk.ijse.aad.backend.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +23,14 @@ import java.util.stream.Collectors;
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
-    private final UserRepository userRepository;
+    private final AuthRepository authRepository;
     private final TaskCategoryRepository taskCategoryRepository;
     private final ModelMapper modelMapper;
 
     @Override
     public void saveTask(TaskDTO taskDTO) {
         try {
-            User client = userRepository.findById(taskDTO.getClientId())
+            User client = authRepository.findById(taskDTO.getClientId())
                     .orElseThrow(() -> new RuntimeException("Client not found with ID: " + taskDTO.getClientId()));
 
             // Find task category by name

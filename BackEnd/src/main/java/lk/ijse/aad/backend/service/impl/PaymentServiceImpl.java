@@ -7,7 +7,7 @@ import lk.ijse.aad.backend.entity.Task;
 import lk.ijse.aad.backend.entity.User;
 import lk.ijse.aad.backend.repository.PaymentRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
-import lk.ijse.aad.backend.repository.UserRepository;
+import lk.ijse.aad.backend.repository.AuthRepository;
 import lk.ijse.aad.backend.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,16 +25,16 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final TaskRepository taskRepository;
-    private final UserRepository userRepository;
+    private final AuthRepository authRepository;
     private final ModelMapper modelMapper;
 
     @Override
     public void savePayment(PaymentDTO paymentDTO) {
         try {
-            User client = userRepository.findById(paymentDTO.getClientId())
+            User client = authRepository.findById(paymentDTO.getClientId())
                     .orElseThrow(() -> new RuntimeException("Client not found with ID: " + paymentDTO.getClientId()));
 
-            User freelancer = userRepository.findById(paymentDTO.getFreelancerId())
+            User freelancer = authRepository.findById(paymentDTO.getFreelancerId())
                     .orElseThrow(() -> new RuntimeException("Freelancer not found with ID: " + paymentDTO.getFreelancerId()));
 
             Task task = taskRepository.findById(paymentDTO.getTaskId())
