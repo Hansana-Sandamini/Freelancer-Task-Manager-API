@@ -79,4 +79,15 @@ public class TaskController {
         ));
     }
 
+    @GetMapping("/client/{clientId}")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    public ResponseEntity<ApiResponse> getTasksByClient(@PathVariable Long clientId) {
+        List<TaskDTO> tasks = taskService.getTasksByClientId(String.valueOf(clientId));
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Tasks Retrieved Successfully",
+                tasks
+        ));
+    }
+
 }

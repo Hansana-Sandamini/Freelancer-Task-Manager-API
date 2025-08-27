@@ -106,6 +106,13 @@ public class TaskServiceImpl implements TaskService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<TaskDTO> getTasksByClientId(String clientId) {
+        return taskRepository.findByClientId(Long.valueOf(clientId)).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private TaskDTO convertToDTO(Task task) {
         TaskDTO dto = new TaskDTO();
         dto.setId(task.getId());
