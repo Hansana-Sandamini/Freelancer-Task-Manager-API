@@ -12,4 +12,5 @@ public interface ProposalService {
     ProposalDTO getProposalById(Long id);
     List<ProposalDTO> getProposalsByTaskId(Long taskId);
     List<ProposalDTO> getProposalsByFreelancerId(Long freelancerId);
+    List<ProposalDTO> getProposalsByClientId(Long clientId);
 }

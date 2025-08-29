@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8085/api/v1/proposals";
+const PROPOSAL_BASE_URL = "http://localhost:8085/api/v1/proposals";
 
 let currentUser = {
     id: localStorage.getItem("userId"),
@@ -7,25 +7,9 @@ let currentUser = {
 
 let proposals = [];
 
+// ===================== Initial Load =====================
 document.addEventListener("DOMContentLoaded", () => {
-    // Show the correct sidebar based on user role
-    const role = currentUser.role?.toLowerCase();
-    if (role) {
-        document.getElementById(`sidebar-${role}`).style.display = "block";
-    }
-
-    // Highlight the Proposals link
-    const sidebar = document.getElementById(`sidebar-${role}`);
-    if (sidebar) {
-        const links = sidebar.querySelectorAll(".nav-link");
-        links.forEach(link => {
-            if (link.href.includes("proposals.html")) {
-                link.classList.add("active");
-            }
-        });
-    }
-
-    // Load proposals and attach event listeners
+    loadSidebarBasedOnRole();
     loadProposals();
 
     // Attach event listeners for proposal form submission and action buttons
@@ -49,11 +33,11 @@ document.addEventListener("DOMContentLoaded", () => {
 // Load proposals based on user role
 async function loadProposals() {
     try {
-        let url = API_BASE_URL;
+        let url = PROPOSAL_BASE_URL;
         if (currentUser.role === "FREELANCER") {
             url += `/freelancer/${currentUser.id}`;
         } else if (currentUser.role === "CLIENT") {
-            url += `/task/${getClientTaskIds()}`; // Assumes a function to get client task IDs
+            url += `/client/${currentUser.id}`;
         }
 
         const response = await fetch(url, {
@@ -75,7 +59,7 @@ async function loadProposals() {
     }
 }
 
-// Populate Proposals Table
+// ===================== Populate Proposals Table =====================
 function populateProposalsTable() {
     const tableBody = document.getElementById("proposalTableBody");
     if (!tableBody) return;
@@ -133,11 +117,18 @@ function renderActionButtons(proposal) {
             </button>
         `;
     }
+    if (currentUser.role === "ADMIN") {
+        buttons += `
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteProposal(${proposal.id})">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+    }
 
     return buttons;
 }
 
-// View proposal details
+// ===================== View proposal details =====================
 function viewProposalDetails(proposalId, editMode = false) {
     const proposal = proposals.find(p => p.id === proposalId);
     if (!proposal) return;
@@ -184,6 +175,10 @@ function viewProposalDetails(proposalId, editMode = false) {
         editBtn.classList.add("d-none");
     }
 
+    if (currentUser.role === "ADMIN") {
+        deleteBtn.classList.remove("d-none");
+    }
+
     const modal = new bootstrap.Modal(document.getElementById("proposalDetailsModal"));
     modal.show();
 }
@@ -199,7 +194,7 @@ function enableProposalEdit() {
     document.getElementById("deleteProposalBtn").classList.remove("d-none");
 }
 
-// Save proposal changes
+// ===================== Save proposal changes =====================
 async function saveProposalChanges() {
     const proposalId = document.getElementById("modalProposalId").value;
     const updatedProposal = {
@@ -209,7 +204,7 @@ async function saveProposalChanges() {
     };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/${proposalId}`, {
+        const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -232,12 +227,12 @@ async function saveProposalChanges() {
     }
 }
 
-// Delete proposal
+// ===================== Delete proposal =====================
 async function deleteProposal(proposalId) {
     if (!confirm("Are you sure you want to delete this proposal?")) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/${proposalId}`, {
+        const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}`, {
             method: "DELETE",
             headers: {
                 "Authorization": "Bearer " + localStorage.getItem("token")
@@ -258,12 +253,12 @@ async function deleteProposal(proposalId) {
     }
 }
 
-// Accept proposal
+// ===================== Accept proposal =====================
 async function acceptProposal(proposalId) {
     if (!confirm("Are you sure you want to accept this proposal?")) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/${proposalId}`, {
+        const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -286,12 +281,12 @@ async function acceptProposal(proposalId) {
     }
 }
 
-// Reject proposal
+// ===================== Reject proposal =====================
 async function rejectProposal(proposalId) {
     if (!confirm("Are you sure you want to reject this proposal?")) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/${proposalId}`, {
+        const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -314,7 +309,7 @@ async function rejectProposal(proposalId) {
     }
 }
 
-// Submit proposal (for Freelancers)
+// ===================== Submit proposal (for Freelancers) =====================
 async function submitProposal(e) {
     e.preventDefault();
 
@@ -326,7 +321,7 @@ async function submitProposal(e) {
     };
 
     try {
-        const response = await fetch(API_BASE_URL, {
+        const response = await fetch(PROPOSAL_BASE_URL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -363,18 +358,30 @@ function formatDate(dateStr) {
     });
 }
 
-// Placeholder for fetching client task IDs
-async function getClientTaskIds() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/client/${currentUser.id}`, {
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            }
-        });
-        const result = await response.json();
-        return result.data.map(task => task.id).join(','); // Return comma-separated IDs
-    } catch (error) {
-        console.error("Error fetching client tasks:", error);
-        return '';
+// Function to load sidebar based on role
+function loadSidebarBasedOnRole() {
+    const role = localStorage.getItem('role');
+    const adminSidebar = document.getElementById('sidebar-admin');
+    const clientSidebar = document.getElementById('sidebar-client');
+    const freelancerSidebar = document.getElementById('sidebar-freelancer');
+
+    // Hide all sidebars first
+    if (adminSidebar) adminSidebar.style.display = 'none';
+    if (clientSidebar) clientSidebar.style.display = 'none';
+    if (freelancerSidebar) freelancerSidebar.style.display = 'none';
+
+    // Show appropriate sidebar
+    switch(role) {
+        case 'ADMIN':
+            if (adminSidebar) adminSidebar.style.display = 'block';
+            break;
+        case 'CLIENT':
+            if (clientSidebar) clientSidebar.style.display = 'block';
+            break;
+        case 'FREELANCER':
+            if (freelancerSidebar) freelancerSidebar.style.display = 'block';
+            break;
+        default:
+            console.error('Unknown role:', role);
     }
 }

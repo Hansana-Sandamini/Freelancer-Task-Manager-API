@@ -96,4 +96,15 @@ public class ProposalController {
         ));
     }
 
+    @GetMapping("/client/{clientId}")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<ApiResponse> getProposalsByClient(@PathVariable Long clientId) {
+        List<ProposalDTO> proposals = proposalService.getProposalsByClientId(clientId);
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Client Proposals Retrieved Successfully",
+                proposals
+        ));
+    }
+
 }
