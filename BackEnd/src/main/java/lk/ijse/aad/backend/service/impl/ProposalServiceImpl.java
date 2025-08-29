@@ -117,6 +117,13 @@ public class ProposalServiceImpl implements ProposalService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<ProposalDTO> getProposalsByClientId(Long clientId) {
+        return proposalRepository.findByTaskClientId(clientId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private ProposalDTO convertToDTO(Proposal proposal) {
         ProposalDTO dto = new ProposalDTO();
         dto.setId(proposal.getId());
