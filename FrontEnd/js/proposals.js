@@ -255,16 +255,15 @@ async function deleteProposal(proposalId) {
 
 // ===================== Accept proposal =====================
 async function acceptProposal(proposalId) {
-    if (!confirm("Are you sure you want to accept this proposal?")) return;
+    if (!confirm("Are you sure you want to accept this proposal? This will automatically reject all other proposals for this task.")) return;
 
     try {
-        const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}`, {
+        const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}/accept`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer " + localStorage.getItem("token")
-            },
-            body: JSON.stringify({ status: "ACCEPTED" })
+            }
         });
 
         const result = await response.json();
@@ -286,13 +285,12 @@ async function rejectProposal(proposalId) {
     if (!confirm("Are you sure you want to reject this proposal?")) return;
 
     try {
-        const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}`, {
+        const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}/reject`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer " + localStorage.getItem("token")
-            },
-            body: JSON.stringify({ status: "REJECTED" })
+            }
         });
 
         const result = await response.json();

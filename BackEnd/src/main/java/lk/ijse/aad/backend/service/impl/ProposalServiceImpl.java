@@ -124,6 +124,68 @@ public class ProposalServiceImpl implements ProposalService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void acceptProposal(Long proposalId) {
+        try {
+            Proposal proposal = proposalRepository.findById(proposalId)
+                    .orElseThrow(() -> new RuntimeException("Proposal not found with ID: " + proposalId));
+
+            // Check if the proposal is still pending
+            if (proposal.getStatus() != ProposalStatus.PENDING) {
+                throw new RuntimeException("Proposal is not in PENDING status");
+            }
+
+            // Update proposal status to ACCEPTED
+            proposal.setStatus(ProposalStatus.ACCEPTED);
+            proposalRepository.save(proposal);
+
+            // Update task status to IN_PROGRESS
+            Task task = proposal.getTask();
+            task.setStatus(TaskStatus.IN_PROGRESS);
+            taskRepository.save(task);
+
+            // Reject all other proposals for the same task
+            List<Proposal> otherProposals = proposalRepository.findByTaskId(task.getId())
+                    .stream()
+                    .filter(p -> !p.getId().equals(proposalId) && p.getStatus() == ProposalStatus.PENDING)
+                    .collect(Collectors.toList());
+
+            for (Proposal otherProposal : otherProposals) {
+                otherProposal.setStatus(ProposalStatus.REJECTED);
+                proposalRepository.save(otherProposal);
+            }
+
+            log.info("Proposal accepted successfully: {}", proposalId);
+
+        } catch (Exception e) {
+            log.error("Error while accepting proposal: {}", proposalId, e);
+            throw new RuntimeException("Failed to accept proposal: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void rejectProposal(Long proposalId) {
+        try {
+            Proposal proposal = proposalRepository.findById(proposalId)
+                    .orElseThrow(() -> new RuntimeException("Proposal not found with ID: " + proposalId));
+
+            // Check if the proposal is still pending
+            if (proposal.getStatus() != ProposalStatus.PENDING) {
+                throw new RuntimeException("Proposal is not in PENDING status");
+            }
+
+            // Update proposal status to REJECTED
+            proposal.setStatus(ProposalStatus.REJECTED);
+            proposalRepository.save(proposal);
+
+            log.info("Proposal rejected successfully: {}", proposalId);
+
+        } catch (Exception e) {
+            log.error("Error while rejecting proposal: {}", proposalId, e);
+            throw new RuntimeException("Failed to reject proposal: " + e.getMessage(), e);
+        }
+    }
+
     private ProposalDTO convertToDTO(Proposal proposal) {
         ProposalDTO dto = new ProposalDTO();
         dto.setId(proposal.getId());
