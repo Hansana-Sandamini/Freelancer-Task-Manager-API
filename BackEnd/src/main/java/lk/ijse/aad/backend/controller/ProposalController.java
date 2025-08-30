@@ -107,4 +107,26 @@ public class ProposalController {
         ));
     }
 
+    @PutMapping("/{id}/accept")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<ApiResponse> acceptProposal(@PathVariable Long id) {
+        proposalService.acceptProposal(id);
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Proposal Accepted Successfully",
+                null
+        ));
+    }
+
+    @PutMapping("/{id}/reject")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<ApiResponse> rejectProposal(@PathVariable Long id) {
+        proposalService.rejectProposal(id);
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Proposal Rejected Successfully",
+                null
+        ));
+    }
+
 }
