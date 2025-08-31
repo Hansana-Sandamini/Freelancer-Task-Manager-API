@@ -54,7 +54,8 @@ public class AuthServiceImpl implements AuthService {
                     null,
                     user.getId(),
                     user.getEmail(),
-                    user.getRole().name()
+                    user.getRole().name(),
+                    user.getName()
             );
         } else {
             throw new BadCredentialsException("Invalid credentials");

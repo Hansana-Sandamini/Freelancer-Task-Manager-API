@@ -108,6 +108,7 @@ if (signinForm) {
             localStorage.setItem("email", result.data.email);
             localStorage.setItem("role", result.data.role);
             localStorage.setItem("userId", result.data.userId);
+            localStorage.setItem("name", result.data.name);
 
             // Initialize profile fields
             if (!localStorage.getItem('profile_bio')) localStorage.setItem('profile_bio', '');
@@ -148,6 +149,7 @@ document.getElementById("logoutBtn").addEventListener("click", function () {
     localStorage.removeItem("email");
     localStorage.removeItem("role");
     localStorage.removeItem("userId");
+    localStorage.removeItem("name");
 
     // Redirect to sign-in page
     window.location.href = "/FrontEnd/index.html";
