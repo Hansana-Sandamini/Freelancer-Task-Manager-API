@@ -28,11 +28,11 @@ public class Proposal {
     @Enumerated(EnumType.STRING)
     private ProposalStatus status;  // PENDING, ACCEPTED, REJECTED
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "freelancer_id", nullable = false)
     private User freelancer;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 

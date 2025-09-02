@@ -268,7 +268,11 @@ async function acceptProposal(proposalId) {
         const result = await response.json();
         if (result.code === 200) {
             alert("Proposal accepted successfully!");
-            bootstrap.Modal.getInstance(document.getElementById("proposalDetailsModal")).hide();
+
+            const modalEl = document.getElementById("proposalDetailsModal");
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+
             loadProposals();
         } else {
             alert("Failed to accept proposal: " + result.message);

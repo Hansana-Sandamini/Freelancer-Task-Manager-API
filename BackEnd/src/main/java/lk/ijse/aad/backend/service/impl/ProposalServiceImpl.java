@@ -5,10 +5,12 @@ import lk.ijse.aad.backend.entity.*;
 import lk.ijse.aad.backend.repository.ProposalRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.repository.AuthRepository;
+import lk.ijse.aad.backend.service.EmailService;
 import lk.ijse.aad.backend.service.ProposalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,6 +26,7 @@ public class ProposalServiceImpl implements ProposalService {
     private final AuthRepository authRepository;
     private final TaskRepository taskRepository;
     private final ModelMapper modelMapper;
+    private final EmailService emailService;
 
     @Override
     public void saveProposal(ProposalDTO proposalDTO) {
@@ -43,6 +46,10 @@ public class ProposalServiceImpl implements ProposalService {
             proposal.setTask(task);
 
             proposalRepository.save(proposal);
+
+            // Send email to client
+            sendProposalEmailToClient(proposal.getId());
+
             log.info("Proposal saved successfully for task: {}", task.getTitle());
 
         } catch (Exception e) {
@@ -148,12 +155,18 @@ public class ProposalServiceImpl implements ProposalService {
             List<Proposal> otherProposals = proposalRepository.findByTaskId(task.getId())
                     .stream()
                     .filter(p -> !p.getId().equals(proposalId) && p.getStatus() == ProposalStatus.PENDING)
-                    .collect(Collectors.toList());
+                    .toList();
 
             for (Proposal otherProposal : otherProposals) {
                 otherProposal.setStatus(ProposalStatus.REJECTED);
                 proposalRepository.save(otherProposal);
+
+                // Send rejection email to other freelancers
+                sendRejectionEmail(otherProposal);
             }
+
+            // Send acceptance email
+            sendAcceptanceEmail(proposal);
 
             log.info("Proposal accepted successfully: {}", proposalId);
 
@@ -178,12 +191,61 @@ public class ProposalServiceImpl implements ProposalService {
             proposal.setStatus(ProposalStatus.REJECTED);
             proposalRepository.save(proposal);
 
+            // Send rejection email
+            sendRejectionEmail(proposal);
+
             log.info("Proposal rejected successfully: {}", proposalId);
 
         } catch (Exception e) {
             log.error("Error while rejecting proposal: {}", proposalId, e);
             throw new RuntimeException("Failed to reject proposal: " + e.getMessage(), e);
         }
+    }
+
+    @Async
+    protected void sendProposalEmailToClient(Long proposalId) {
+        Proposal proposal = proposalRepository.findByIdWithFreelancerAndTask(proposalId)
+                .orElseThrow(() -> new RuntimeException("Proposal not found: " + proposalId));
+
+        Task task = proposal.getTask();
+        String clientEmail = task.getClient().getEmail();
+        String subject = "📩 New Proposal for Your Task: " + task.getTitle();
+        String message = "<h2>Hello " + task.getClient().getName() + ",</h2>" +
+                "<p>A freelancer has submitted a proposal for your task:</p>" +
+                "<ul>" +
+                "<li><b>Task:</b> " + task.getTitle() + "</li>" +
+                "<li><b>Freelancer Name:</b> " + proposal.getFreelancer().getName() + "</li>" +
+                "<li><b>Bid Amount:</b> $" + proposal.getBidAmount() + "</li>" +
+                "<li><b>Cover Letter:</b> " + proposal.getCoverLetter() + "</li>" +
+                "</ul>" +
+                "<p>You can review this proposal on TaskFlow.</p>" +
+                "<p>Best regards,<br>TaskFlow Team</p>";
+
+        emailService.sendEmail(clientEmail, subject, message);
+    }
+
+    @Async
+    protected void sendAcceptanceEmail(Proposal proposal) {
+        String to = proposal.getFreelancer().getEmail();
+        String subject = "🎉 Your Proposal Has Been Accepted!";
+        String message = "<h2>Congratulations " + proposal.getFreelancer().getName() + "!</h2>" +
+                "<p>Your proposal for the task <b>" + proposal.getTask().getTitle() + "</b> has been <b>ACCEPTED</b>.</p>" +
+                "<p>The client will be in touch with further details.</p>" +
+                "<p>Best regards,<br>TaskFlow Team</p>";
+
+        emailService.sendEmail(to, subject, message);
+    }
+
+    @Async
+    protected void sendRejectionEmail(Proposal proposal) {
+        String to = proposal.getFreelancer().getEmail();
+        String subject = "❌ Your Proposal Was Rejected";
+        String message = "<h2>Hello " + proposal.getFreelancer().getName() + ",</h2>" +
+                "<p>Your proposal for the task <b>" + proposal.getTask().getTitle() + "</b> has been <b>REJECTED</b>.</p>" +
+                "<p>Don’t be discouraged—there are plenty of other tasks waiting for you!</p>" +
+                "<p>Best regards,<br>TaskFlow Team</p>";
+
+        emailService.sendEmail(to, subject, message);
     }
 
     private ProposalDTO convertToDTO(Proposal proposal) {

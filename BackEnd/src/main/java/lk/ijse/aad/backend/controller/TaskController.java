@@ -2,7 +2,6 @@ package lk.ijse.aad.backend.controller;
 
 import lk.ijse.aad.backend.dto.ApiResponse;
 import lk.ijse.aad.backend.dto.TaskDTO;
-import lk.ijse.aad.backend.service.EmailService;
 import lk.ijse.aad.backend.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,30 +17,11 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
-    private final EmailService emailService;
 
     @PostMapping
     @PreAuthorize("hasRole('CLIENT')")
     public ResponseEntity<ApiResponse> createTask(@RequestBody TaskDTO taskDTO) {
-        // Save task
         taskService.saveTask(taskDTO);
-
-        // Inform all freelancers by email
-        List<String> freelancerEmails = taskService.getAllFreelancerEmails();
-        String subject = "New Task Available: " + taskDTO.getTitle();
-        String message = "<h2>Hello Freelancer!</h2>" +
-                "<p>A new task has been posted:</p>" +
-                "<ul>" +
-                "<li><b>Title:</b> " + taskDTO.getTitle() + "</li>" +
-                "<li><b>Description:</b> " + taskDTO.getDescription() + "</li>" +
-                "</ul>" +
-                "<p>Visit TaskFlow to apply for this task.</p>" +
-                "<p>Best regards,<br>The TaskFlow Team</p>";
-
-        for (String email : freelancerEmails) {
-            emailService.sendEmail(email, subject, message);
-        }
-
         return ResponseEntity.ok(new ApiResponse(
                 201,
                 "Task Created Successfully",
