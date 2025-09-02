@@ -6,10 +6,12 @@ import lk.ijse.aad.backend.repository.TaskCategoryRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.repository.AuthRepository;
 import lk.ijse.aad.backend.repository.UserRepository;
+import lk.ijse.aad.backend.service.EmailService;
 import lk.ijse.aad.backend.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,6 +27,7 @@ public class TaskServiceImpl implements TaskService {
     private final UserRepository userRepository;
     private final TaskCategoryRepository taskCategoryRepository;
     private final ModelMapper modelMapper;
+    private final EmailService emailService;
 
     @Override
     public void saveTask(TaskDTO taskDTO) {
@@ -42,6 +45,10 @@ public class TaskServiceImpl implements TaskService {
             task.setStatus(TaskStatus.OPEN);
 
             taskRepository.save(task);
+
+            // Send emails to all freelancers
+            sendMailToFreelancers(task);
+
             log.info("Task saved successfully: {}", taskDTO.getTitle());
 
         } catch (Exception e) {
@@ -124,6 +131,28 @@ public class TaskServiceImpl implements TaskService {
     public Task getTaskEntityById(Long id) {
         return taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
+    }
+
+    @Async
+    protected void sendMailToFreelancers(Task task) {
+        List<String> freelancerEmails = userRepository.findByRole(Role.FREELANCER)
+                .stream()
+                .map(User::getEmail)
+                .toList();
+
+        String subject = "🆕 New Task Available: " + task.getTitle();
+        String message = "<h2>Hello Freelancer!</h2>" +
+                "<p>A new task has been posted:</p>" +
+                "<ul>" +
+                "<li><b>Title:</b> " + task.getTitle() + "</li>" +
+                "<li><b>Description:</b> " + task.getDescription() + "</li>" +
+                "</ul>" +
+                "<p>Visit TaskFlow to apply for this task.</p>" +
+                "<p>Best regards,<br>The TaskFlow Team</p>";
+
+        for (String email : freelancerEmails) {
+            emailService.sendEmail(email, subject, message);
+        }
     }
 
     private TaskDTO convertToDTO(Task task) {
