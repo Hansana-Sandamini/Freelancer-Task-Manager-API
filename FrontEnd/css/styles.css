@@ -1,5 +1,7 @@
 #topbar {
     background-color: rgba(0, 0, 0, 0.7) !important;
+    position: fixed;
+    width: 100%;
 }
 
 .btn-custom {
