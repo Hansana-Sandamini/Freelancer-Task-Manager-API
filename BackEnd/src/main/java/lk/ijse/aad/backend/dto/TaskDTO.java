@@ -17,4 +17,6 @@ public class TaskDTO {
     private LocalDate deadline;
     private Long clientId;
     private String taskCategoryName;
+    private Long freelancerId;
+    private String workUrl;
 }

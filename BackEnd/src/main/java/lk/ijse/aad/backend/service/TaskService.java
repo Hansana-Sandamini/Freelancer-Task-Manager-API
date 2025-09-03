@@ -13,4 +13,5 @@ public interface TaskService {
     List<TaskDTO> getTasksByClientId(String clientId);
     List<String> getAllFreelancerEmails();
     Task getTaskEntityById(Long id);
+    void submitWork(Long taskId, String workUrl);
 }

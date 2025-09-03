@@ -135,6 +135,24 @@ main {
     display: none;
 }
 
+.rating-stars {
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.rating-stars .fa-star {
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.rating-stars .fa-star.text-warning {
+    color: #ffc107;
+}
+
+.rating-stars .fa-star:hover {
+    color: #ffc107;
+}
+
 /* Responsive adjustments */
 @media (max-width: 767.98px) {
     .sidebar {

@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -67,6 +69,7 @@ public class TaskServiceImpl implements TaskService {
             existingTask.setTitle(taskDTO.getTitle());
             existingTask.setDescription(taskDTO.getDescription());
             existingTask.setDeadline(taskDTO.getDeadline());
+            existingTask.setWorkUrl(taskDTO.getWorkUrl());
 
             // Update task category if provided
             if (taskDTO.getTaskCategoryName() != null) {
@@ -155,6 +158,92 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
+    @Override
+    public void submitWork(Long taskId, String workUrl) {
+        try {
+            Task task = taskRepository.findById(taskId)
+                    .orElseThrow(() -> new RuntimeException("Task not found with ID: " + taskId));
+
+            // Get current user
+            Long currentUserId = getCurrentUserId();
+            User currentUser = userRepository.findById(currentUserId)
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + currentUserId));
+
+            // Debug logging
+            log.info("=== SUBMIT WORK DEBUG ===");
+            log.info("Task ID: {}", taskId);
+            log.info("Current User ID: {}", currentUserId);
+            log.info("Current User Role: {}", currentUser.getRole());
+            log.info("Task Freelancer ID: {}", task.getFreelancer() != null ? task.getFreelancer().getId() : "NULL");
+            log.info("Task Status: {}", task.getStatus());
+
+            // Verify that the current user is the assigned freelancer
+            if (task.getFreelancer() == null) {
+                throw new RuntimeException("No freelancer is assigned to this task");
+            }
+
+            if (!task.getFreelancer().getId().equals(currentUserId)) {
+                log.error("User ID mismatch: Current={}, Assigned={}", currentUserId, task.getFreelancer().getId());
+                throw new RuntimeException("You are not assigned to this task");
+            }
+
+            // Verify task is in progress
+            if (task.getStatus() != TaskStatus.IN_PROGRESS) {
+                throw new RuntimeException("Task is not in progress. Current status: " + task.getStatus());
+            }
+
+            task.setWorkUrl(workUrl);
+            task.setStatus(TaskStatus.COMPLETED);
+            taskRepository.save(task);
+
+            // Send notification to client
+            sendWorkSubmissionEmail(task);
+
+            log.info("Work submitted for task: {}", taskId);
+
+        } catch (Exception e) {
+            log.error("Error while submitting work for task: {}", taskId, e);
+            throw new RuntimeException("Failed to submit work: " + e.getMessage(), e);
+        }
+    }
+
+    // Replace placeholder with actual implementation
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("No authenticated user found");
+        }
+        String email = authentication.getName(); // Assumes email is the username
+        User user = (User) userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        return user.getId();
+    }
+
+    @Async
+    protected void sendWorkSubmissionEmail(Task task) {
+        if (task.getFreelancer() != null && task.getClient() != null) {
+            // Email to client
+            String clientSubject = "📬 Work Submitted: " + task.getTitle();
+            String clientMessage = "<h2>Work Submitted for Review</h2>" +
+                    "<p>The freelancer has submitted work for your task: <b>" + task.getTitle() + "</b></p>" +
+                    "<p>Work URL: <a href=\"" + task.getWorkUrl() + "\">" + task.getWorkUrl() + "</a></p>" +
+                    "<p>Please review the work and mark it as completed if satisfied.</p>" +
+                    "<p>Best regards,<br>The TaskFlow Team</p>";
+
+            emailService.sendEmail(task.getClient().getEmail(), clientSubject, clientMessage);
+
+            // Email to freelancer
+            String freelancerSubject = "✅ Work Submitted: " + task.getTitle();
+            String freelancerMessage = "<h2>Work Submitted Successfully</h2>" +
+                    "<p>You have successfully submitted work for the task: <b>" + task.getTitle() + "</b></p>" +
+                    "<p>Work URL: <a href=\"" + task.getWorkUrl() + "\">" + task.getWorkUrl() + "</a></p>" +
+                    "<p>The client will review your work and mark it as completed.</p>" +
+                    "<p>Best regards,<br>The TaskFlow Team</p>";
+
+            emailService.sendEmail(task.getFreelancer().getEmail(), freelancerSubject, freelancerMessage);
+        }
+    }
+
     private TaskDTO convertToDTO(Task task) {
         TaskDTO dto = new TaskDTO();
         dto.setId(task.getId());
@@ -164,6 +253,17 @@ public class TaskServiceImpl implements TaskService {
         dto.setDeadline(task.getDeadline());
         dto.setClientId(task.getClient().getId());
         dto.setTaskCategoryName(task.getTaskCategory().getName());
+        dto.setWorkUrl(task.getWorkUrl());
+
+        // Add freelancerId if assigned
+        if (task.getFreelancer() != null) {
+            dto.setFreelancerId(task.getFreelancer().getId());
+            log.info("Converting task {} to DTO - Freelancer ID: {}", task.getId(), task.getFreelancer().getId());
+        } else {
+            dto.setFreelancerId(null);
+            log.info("Converting task {} to DTO - No freelancer assigned", task.getId());
+        }
+
         return dto;
     }
 
