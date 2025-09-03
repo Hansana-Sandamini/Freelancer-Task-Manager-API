@@ -36,6 +36,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (role === "ADMIN" || role === "FREELANCER") {
         newTaskButton.style.display = "none";
     }
+
+    // Add event listener for complete task form
+    const completeTaskForm = document.getElementById("completeTaskForm");
+    if (completeTaskForm) {
+        completeTaskForm.addEventListener("submit", function(e) {
+            e.preventDefault();
+            submitWork();
+        });
+    }
 });
 
 // ===================== Load Tasks =====================
@@ -65,6 +74,14 @@ async function loadTasks() {
 function renderTasks(tasks, freelancerProposals = []) {
     taskCardContainer.innerHTML = "";
 
+    // Create a map of tasks with their accepted proposals
+    const taskAssignmentMap = {};
+    freelancerProposals.forEach(proposal => {
+        if (proposal.status === "ACCEPTED") {
+            taskAssignmentMap[proposal.taskId] = proposal;
+        }
+    });
+
     tasks.forEach(task => {
         const card = document.createElement("div");
         card.className = "col";
@@ -87,16 +104,56 @@ function renderTasks(tasks, freelancerProposals = []) {
                 </button>
             `;
         } else if (role === "FREELANCER") {
-            // Check if a proposal exists for this task
+            const currentUserId = Number(localStorage.getItem("userId"));
             const hasProposed = freelancerProposals.some(p => p.taskId === task.id);
 
+            // Check if current user has an accepted proposal for this task
+            const acceptedProposal = taskAssignmentMap[task.id];
+            const isAssigned = acceptedProposal && acceptedProposal.freelancerId === currentUserId;
+
+            console.log("Task:", task.id, "Assigned to me:", isAssigned, "Status:", task.status);
+
             if (hasProposed) {
-                actionButtons = `<span class="badge bg-success fs-6 px-3 py-2">Proposal Sent</span>`;
+                if (isAssigned) {
+                    actionButtons = `<span class="badge bg-success fs-6 px-3 py-2">Assigned to You</span>`;
+                } else {
+                    actionButtons = `<span class="badge fs-6 px-3 py-2" style="background-color: #44484d">Proposal Sent</span>`;
+                }
             } else {
                 actionButtons = `
                     <button class="btn btn-outline-primary" onclick="openProposalModal(${task.id})">
                         <i class="fas fa-paper-plane"></i> Propose
                     </button>`;
+            }
+
+            // Show work submission button for assigned tasks that are in progress
+            if (isAssigned && task.status === "IN_PROGRESS") {
+                actionButtons += `
+                    <button class="btn btn-success ms-2" onclick="openCompleteTaskModal(${task.id})">
+                        <i class="fas fa-check"></i> Submit Work
+                    </button>
+                `;
+            }
+
+            // Show status and work link for freelancer's tasks
+            if (isAssigned) {
+                actionButtons += `
+                    <div class="mt-2">
+                        <span class="badge bg-info text-dark">
+                            <i class="fas fa-tasks"></i> ${task.status.replace('_', ' ')}
+                        </span>
+                    </div>
+                `;
+
+                if (task.workUrl) {
+                    actionButtons += `
+                        <div class="mt-2">
+                            <a href="${task.workUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i> View Submitted Work
+                            </a>
+                        </div>
+                    `;
+                }
             }
         }
 
@@ -108,6 +165,9 @@ function renderTasks(tasks, freelancerProposals = []) {
                     <p class="card-text">${task.description}</p>
                     <p class="card-text"><strong>Status:</strong> ${getStatusBadge(task.status)}</p>
                     <p class="card-text"><strong>Deadline:</strong> ${task.deadline}</p>
+                    ${task.workUrl ? `<p class="card-text"><strong>Work URL:</strong> <a href="${task.workUrl}" target="_blank" 
+                        style="background-color: #7082bb; color: white; padding: 10px; text-decoration: none; border-radius: 8px">
+                            View Work</a></p>` : ''}
                     <div class="d-flex justify-content-end gap-2">
                         ${actionButtons}
                     </div>
@@ -289,4 +349,82 @@ if (proposalForm) {
             alert("Failed to submit proposal: " + error.message);
         }
     });
+}
+
+// ===================== Open Complete Task Modal =====================
+function openCompleteTaskModal(taskId) {
+    document.getElementById("completeTaskId").value = taskId;
+    const modal = new bootstrap.Modal(document.getElementById("completeTaskModal"));
+    modal.show();
+}
+
+// ===================== Submit Work =====================
+async function submitWork() {
+    const taskId = document.getElementById("completeTaskId").value;
+    const workUrl = document.getElementById("workUrl").value;
+
+    if (!workUrl) {
+        alert("Please provide a work URL");
+        return;
+    }
+
+    try {
+        // First verify the task assignment
+        const taskResponse = await fetch(`${TASK_API_BASE}/${taskId}`, {
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            }
+        });
+
+        const taskResult = await taskResponse.json();
+        const task = taskResult.data;
+
+        const currentUserId = Number(localStorage.getItem("userId"));
+        const assignedFreelancerId = task.freelancerId;
+
+        console.log("Assignment Check:", {
+            taskId: taskId,
+            currentUserId: currentUserId,
+            assignedFreelancerId: assignedFreelancerId,
+            status: task.status
+        });
+
+        if (!assignedFreelancerId) {
+            alert("Error: No freelancer is assigned to this task");
+            return;
+        }
+
+        if (assignedFreelancerId !== currentUserId) {
+            alert("Error: You are not assigned to this task. Assigned freelancer ID: " + assignedFreelancerId);
+            return;
+        }
+
+        if (task.status !== "IN_PROGRESS") {
+            alert("Error: Task is not in progress. Current status: " + task.status);
+            return;
+        }
+
+        // Now submit the work
+        const response = await fetch(`${TASK_API_BASE}/${taskId}/submit-work`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
+            body: JSON.stringify({ workUrl: workUrl })
+        });
+
+        const result = await response.json();
+
+        if (result.code === 200) {
+            alert("Work submitted successfully! The client will review your work.");
+            bootstrap.Modal.getInstance(document.getElementById("completeTaskModal")).hide();
+            loadTasks();
+        } else {
+            alert("Failed to submit work: " + (result.message || "Unknown error"));
+        }
+    } catch (error) {
+        console.error("Error submitting work:", error);
+        alert("Error submitting work. Please try again later.");
+    }
 }

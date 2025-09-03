@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -87,6 +88,18 @@ public class TaskController {
                 200,
                 "Tasks Retrieved Successfully",
                 tasks
+        ));
+    }
+
+    @PutMapping("/{id}/submit-work")
+    @PreAuthorize("hasRole('FREELANCER')")
+    public ResponseEntity<ApiResponse> submitWork(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String workUrl = request.get("workUrl");
+        taskService.submitWork(id, workUrl);
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Work Submitted Successfully",
+                null
         ));
     }
 

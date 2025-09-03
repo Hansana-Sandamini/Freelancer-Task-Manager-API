@@ -1,4 +1,5 @@
 const PROPOSAL_BASE_URL = "http://localhost:8085/api/v1/proposals";
+const TASK_URL_BASE = "http://localhost:8085/api/v1/tasks";
 
 let currentUser = {
     id: localStorage.getItem("userId"),
@@ -267,7 +268,7 @@ async function deleteProposal(proposalId) {
 
 // ===================== Accept proposal =====================
 async function acceptProposal(proposalId) {
-    if (!confirm("Are you sure you want to accept this proposal? This will automatically reject all other proposals for this task.")) return;
+    if (!confirm("Are you sure you want to accept this proposal? This will automatically reject all other proposals for this task and assign the task to this freelancer.")) return;
 
     try {
         const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}/accept`, {
@@ -280,7 +281,13 @@ async function acceptProposal(proposalId) {
 
         const result = await response.json();
         if (result.code === 200) {
-            alert("Proposal accepted successfully!");
+            alert("Proposal accepted successfully! The task is now in progress.");
+
+            // Update the task status to IN_PROGRESS
+            const proposal = proposals.find(p => p.id === proposalId);
+            if (proposal) {
+                await updateTaskStatus(proposal.taskId, "IN_PROGRESS");
+            }
 
             const modalEl = document.getElementById("proposalDetailsModal");
             const modalInstance = bootstrap.Modal.getInstance(modalEl);
@@ -293,6 +300,43 @@ async function acceptProposal(proposalId) {
     } catch (error) {
         console.error("Error accepting proposal:", error);
         alert("Error accepting proposal. Please try again.");
+    }
+}
+
+// Helper function to update task status
+async function updateTaskStatus(taskId, status) {
+    try {
+        // First get the current task
+        const taskResponse = await fetch(`${TASK_URL_BASE}/${taskId}`, {
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            }
+        });
+
+        const taskResult = await taskResponse.json();
+        if (taskResult.code === 200) {
+            const task = taskResult.data;
+
+            // Update the task status
+            const updateResponse = await fetch(`${TASK_API_BASE}/${taskId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + localStorage.getItem("token")
+                },
+                body: JSON.stringify({
+                    ...task,
+                    status: status
+                })
+            });
+
+            const updateResult = await updateResponse.json();
+            if (updateResult.code !== 200) {
+                console.error("Failed to update task status:", updateResult.message);
+            }
+        }
+    } catch (error) {
+        console.error("Error updating task status:", error);
     }
 }
 

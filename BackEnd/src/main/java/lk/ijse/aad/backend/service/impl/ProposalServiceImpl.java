@@ -146,9 +146,10 @@ public class ProposalServiceImpl implements ProposalService {
             proposal.setStatus(ProposalStatus.ACCEPTED);
             proposalRepository.save(proposal);
 
-            // Update task status to IN_PROGRESS
+            // Update task status to IN_PROGRESS and assign freelancer
             Task task = proposal.getTask();
             task.setStatus(TaskStatus.IN_PROGRESS);
+            task.setFreelancer(proposal.getFreelancer());
             taskRepository.save(task);
 
             // Reject all other proposals for the same task
@@ -215,7 +216,7 @@ public class ProposalServiceImpl implements ProposalService {
                 "<ul>" +
                 "<li><b>Task:</b> " + task.getTitle() + "</li>" +
                 "<li><b>Freelancer Name:</b> " + proposal.getFreelancer().getName() + "</li>" +
-                "<li><b>Bid Amount:</b> $" + proposal.getBidAmount() + "</li>" +
+                "<li><b>Bid Amount:</b> Rs." + proposal.getBidAmount() + "</li>" +
                 "<li><b>Cover Letter:</b> " + proposal.getCoverLetter() + "</li>" +
                 "</ul>" +
                 "<p>You can review this proposal on TaskFlow.</p>" +

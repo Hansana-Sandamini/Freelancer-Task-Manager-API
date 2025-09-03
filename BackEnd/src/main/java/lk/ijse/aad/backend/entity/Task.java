@@ -40,7 +40,7 @@ public class Task {
     @JoinColumn(name = "client_id", nullable = false)
     private User client;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "freelancer_id")
     private User freelancer;
 
@@ -52,5 +52,8 @@ public class Task {
 
     @OneToMany(mappedBy = "task")
     private List<Review> reviews;
+
+    @Column(name = "work_url")
+    private String workUrl;
 
 }
