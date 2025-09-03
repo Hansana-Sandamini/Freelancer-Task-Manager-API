@@ -7,7 +7,7 @@ const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
 const email = localStorage.getItem("email");
 
-const taskTableBody = document.getElementById("taskTableBody");
+const taskCardContainer = document.getElementById("taskCardContainer");
 const taskForm = document.getElementById("taskForm");
 
 // Helper function for API calls with JWT
@@ -63,26 +63,27 @@ async function loadTasks() {
 
 // ===================== Render Tasks =====================
 function renderTasks(tasks, freelancerProposals = []) {
-    taskTableBody.innerHTML = "";
+    taskCardContainer.innerHTML = "";
 
     tasks.forEach(task => {
-        const tr = document.createElement("tr");
+        const card = document.createElement("div");
+        card.className = "col";
 
         let actionButtons = "";
 
         if (role === "CLIENT") {
             actionButtons = `
-                <button class="btn btn-sm btn-warning" onclick="editTask(${task.id})">
-                    <i class="fas fa-edit"></i>
+                <button class="btn btn-warning me-2" onclick="editTask(${task.id})">
+                    <i class="fas fa-edit"></i> Edit
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})">
-                    <i class="fas fa-trash"></i>
+                <button class="btn btn-danger" onclick="deleteTask(${task.id})">
+                    <i class="fas fa-trash"></i> Delete
                 </button>
             `;
         } else if (role === "ADMIN") {
             actionButtons = `
-                <button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})">
-                    <i class="fas fa-trash"></i>
+                <button class="btn btn-danger" onclick="deleteTask(${task.id})">
+                    <i class="fas fa-trash"></i> Delete
                 </button>
             `;
         } else if (role === "FREELANCER") {
@@ -90,24 +91,31 @@ function renderTasks(tasks, freelancerProposals = []) {
             const hasProposed = freelancerProposals.some(p => p.taskId === task.id);
 
             if (hasProposed) {
-                actionButtons = `<span class="badge bg-success">Proposal Sent</span>`;
+                actionButtons = `<span class="badge bg-success fs-6 px-3 py-2">Proposal Sent</span>`;
             } else {
-                actionButtons = `<button class="btn btn-sm btn-outline-primary" onclick="openProposalModal(${task.id})">
-                    <i class="fas fa-paper-plane"></i> Propose</button>`;
+                actionButtons = `
+                    <button class="btn btn-outline-primary" onclick="openProposalModal(${task.id})">
+                        <i class="fas fa-paper-plane"></i> Propose
+                    </button>`;
             }
         }
 
-        tr.innerHTML = `
-            <td>${task.id}</td>
-            <td>${task.title}</td>
-            <td>${task.description}</td>
-            <td>${task.taskCategoryName}</td>
-            <td>${getStatusBadge(task.status)}</td>
-            <td>${task.deadline}</td>
-            <td>${actionButtons}</td>
+        card.innerHTML = `
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">${task.title}</h5>
+                    <p class="card-text"><strong>Category:</strong> ${task.taskCategoryName}</p>
+                    <p class="card-text">${task.description}</p>
+                    <p class="card-text"><strong>Status:</strong> ${getStatusBadge(task.status)}</p>
+                    <p class="card-text"><strong>Deadline:</strong> ${task.deadline}</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        ${actionButtons}
+                    </div>
+                </div>
+            </div>
         `;
 
-        taskTableBody.appendChild(tr);
+        taskCardContainer.appendChild(card);
     });
 }
 
@@ -232,13 +240,13 @@ async function populateCategories() {
 function getStatusBadge(status) {
     switch (status) {
         case "OPEN":
-            return `<span class="badge bg-warning text-dark">OPEN</span>`;
+            return `<span class="badge bg-warning text-dark fs-6 px-3 py-2">OPEN</span>`;
         case "IN_PROGRESS":
-            return `<span class="badge bg-info text-dark">IN PROGRESS</span>`;
+            return `<span class="badge bg-info text-dark fs-6 px-3 py-2">IN PROGRESS</span>`;
         case "COMPLETED":
-            return `<span class="badge bg-success">COMPLETED</span>`;
+            return `<span class="badge bg-success fs-6 px-3 py-2">COMPLETED</span>`;
         default:
-            return `<span class="badge bg-secondary">${status}</span>`;
+            return `<span class="badge bg-secondary fs-6 px-3 py-2">${status}</span>`;
     }
 }
 
@@ -265,8 +273,9 @@ if (proposalForm) {
                 freelancerId: Number(localStorage.getItem("userId"))
             };
 
-            // Send proposal to backend
-            await apiCall(PROPOSAL_API_URL, "POST", proposalData);
+            true,
+                // Send proposal to backend
+                await apiCall(PROPOSAL_API_URL, "POST", proposalData);
 
             alert("Proposal submitted successfully!");
             proposalForm.reset();

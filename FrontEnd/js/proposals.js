@@ -48,7 +48,7 @@ async function loadProposals() {
         const result = await response.json();
         if (result.code === 200) {
             proposals = result.data || [];
-            populateProposalsTable();
+            renderProposals();
         } else {
             alert("Failed to load proposals: " + result.message);
         }
@@ -58,68 +58,81 @@ async function loadProposals() {
     }
 }
 
-// ===================== Populate Proposals Table =====================
-function populateProposalsTable() {
-    const tableBody = document.getElementById("proposalTableBody");
-    if (!tableBody) return;
+// ===================== Render Proposals =====================
+function renderProposals() {
+    const cardContainer = document.getElementById("proposalCardContainer");
+    if (!cardContainer) return;
 
-    tableBody.innerHTML = "";
+    cardContainer.innerHTML = "";
 
     proposals.forEach(proposal => {
-        const row = document.createElement("tr");
+        const card = document.createElement("div");
+        card.className = "col";
 
         // Status badge color
         let statusClass = "badge bg-secondary";
-        if (proposal.status === "PENDING") statusClass = "badge bg-warning";
+        if (proposal.status === "PENDING") statusClass = "badge bg-warning text-dark";
         else if (proposal.status === "ACCEPTED") statusClass = "badge bg-success";
         else if (proposal.status === "REJECTED") statusClass = "badge bg-danger";
 
-        row.innerHTML = `
-            <td>${proposal.id}</td>
-            <td>${proposal.taskTitle}</td>
-            <td>${proposal.freelancerName}</td>
-            <td class="cover-letter">${proposal.coverLetter}</td>
-            <td>Rs ${proposal.bidAmount.toFixed(2)}</td>
-            <td>${formatDate(proposal.submittedAt)}</td>
-            <td><span class="${statusClass}">${proposal.status}</span></td>
-            <td>${renderActionButtons(proposal)}</td>
+        // Truncate cover letter to avoid overly large cards
+        const maxCoverLetterLength = 100;
+        const coverLetter = proposal.coverLetter.length > maxCoverLetterLength
+            ? proposal.coverLetter.substring(0, maxCoverLetterLength) + "..."
+            : proposal.coverLetter;
+
+        card.innerHTML = `
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">${proposal.taskTitle || "Unknown Task"}</h5>
+<!--                    <h6 class="card-subtitle mb-2 text-muted">ID: ${proposal.id}</h6>-->
+                    <p class="card-text"><strong>Freelancer:</strong> ${proposal.freelancerName || "Unknown Freelancer"}</p>
+                    <p class="card-text"><strong>Cover Letter:</strong> ${coverLetter}</p>
+                    <p class="card-text"><strong>Bid Amount:</strong> Rs ${proposal.bidAmount.toFixed(2)}</p>
+                    <p class="card-text"><strong>Submitted At:</strong> ${formatDate(proposal.submittedAt)}</p>
+                    <p class="card-text"><strong>Status:</strong> <span class="${statusClass} fs-6 px-3 py-2">${proposal.status}</span></p>
+                    <div class="d-flex justify-content-end gap-2">
+                        ${renderActionButtons(proposal)}
+                    </div>
+                </div>
+            </div>
         `;
 
-        tableBody.appendChild(row);
+        cardContainer.appendChild(card);
     });
 }
 
 // Render action buttons based on user role
 function renderActionButtons(proposal) {
     let buttons = `
-        <button class="btn btn-sm btn-outline-primary me-1" onclick="viewProposalDetails(${proposal.id})">
-            <i class="fas fa-eye"></i>
+        <button class="btn btn-outline-primary" onclick="viewProposalDetails(${proposal.id})">
+            <i class="fas fa-eye"></i> View
         </button>
     `;
 
     if (currentUser.role === "FREELANCER" && proposal.status === "PENDING") {
         buttons += `
-            <button class="btn btn-sm btn-outline-secondary me-1" onclick="viewProposalDetails(${proposal.id}, true)">
-                <i class="fas fa-edit"></i>
+            <button class="btn btn-outline-secondary me-1" onclick="viewProposalDetails(${proposal.id}, true)">
+                <i class="fas fa-edit"></i> Edit
             </button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteProposal(${proposal.id})">
-                <i class="fas fa-trash"></i>
+            <button class="btn btn-outline-danger" onclick="deleteProposal(${proposal.id})">
+                <i class="fas fa-trash"></i> Delete
             </button>
         `;
     } else if (currentUser.role === "CLIENT" && proposal.status === "PENDING") {
         buttons += `
-            <button class="btn btn-sm btn-outline-success me-1" onclick="acceptProposal(${proposal.id})">
-                <i class="fas fa-check"></i>
+            <button class="btn btn-outline-success me-1" onclick="acceptProposal(${proposal.id})">
+                <i class="fas fa-check"></i> Accept
             </button>
-            <button class="btn btn-sm btn-outline-danger" onclick="rejectProposal(${proposal.id})">
-                <i class="fas fa-times"></i>
+            <button class="btn btn-outline-danger" onclick="rejectProposal(${proposal.id})">
+                <i class="fas fa-times"></i> Reject
             </button>
         `;
     }
     if (currentUser.role === "ADMIN") {
         buttons += `
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteProposal(${proposal.id})">
-                <i class="fas fa-trash"></i>
+            <button class="btn btn-outline-danger" onclick="deleteProposal(${proposal.id})">
+                <i class="fas fa-trash"></i> Delete
             </button>
         `;
     }
