@@ -48,7 +48,7 @@
 
 .sidebar .nav-link.active {
     color: #fff;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #b1bfd5 0%, #00173b 100%);
 }
 
 .sidebar .nav-link:hover:not(.active) {
@@ -57,7 +57,8 @@
 
 .sidebar .nav-link i {
     margin-right: 4px;
-    color: #667eea;
+    color: #00173b;
+
 }
 
 .sidebar .nav-link.active i {
@@ -136,7 +137,7 @@ main {
 }
 
 .rating-stars {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     cursor: pointer;
 }
 

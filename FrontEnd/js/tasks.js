@@ -1,6 +1,8 @@
 const TASK_API_BASE = "http://localhost:8085/api/v1/tasks";
 const CATEGORY_API_URL = "http://localhost:8085/api/v1/task-categories";
 const PROPOSAL_API_URL = "http://localhost:8085/api/v1/proposals";
+const REVIEW_API_URL = "http://localhost:8085/api/v1/reviews";
+import { openChat } from './chat.js';
 
 // Get token, role and email from localStorage
 const token = localStorage.getItem("token");
@@ -23,7 +25,7 @@ async function apiCall(url, method = "GET", body = null) {
 
     const response = await fetch(url, options);
     const result = await response.json();
-    if (!response.ok) throw new Error(result.data || "API Error");
+    if (!response.ok) throw new Error(result.message || result.data || "API Error");
     return result.data;
 }
 
@@ -45,7 +47,40 @@ document.addEventListener('DOMContentLoaded', function() {
             submitWork();
         });
     }
+
+    // Add event listener for review form
+    const reviewForm = document.getElementById("reviewForm");
+    if (reviewForm) {
+        reviewForm.addEventListener("submit", function(e) {
+            e.preventDefault();
+            submitReview();
+        });
+    }
+
+    // Initialize star rating
+    initStarRating();
 });
+
+// Initialize star rating functionality
+function initStarRating() {
+    const stars = document.querySelectorAll('.rating-stars i');
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.getAttribute('data-rating'));
+            document.getElementById('ratingValue').value = rating;
+
+            // Reset all stars
+            stars.forEach(s => s.classList.remove('text-warning'));
+
+            // Highlight selected and previous stars
+            stars.forEach(s => {
+                if (parseInt(s.getAttribute('data-rating')) <= rating) {
+                    s.classList.add('text-warning');
+                }
+            });
+        });
+    });
+}
 
 // ===================== Load Tasks =====================
 async function loadTasks() {
@@ -59,19 +94,38 @@ async function loadTasks() {
         }
 
         let freelancerProposals = [];
+        let hasReviewedMap = {};
+
         if (role === "FREELANCER") {
             const userId = Number(localStorage.getItem("userId"));
             freelancerProposals = await apiCall(`${PROPOSAL_API_URL}/freelancer/${userId}`);
         }
 
-        renderTasks(tasks, freelancerProposals);
+        // For clients, check which tasks they've already reviewed
+        if (role === "CLIENT") {
+            const clientId = Number(localStorage.getItem("userId"));
+            for (const task of tasks) {
+                if (task.status === "COMPLETED" && task.freelancerId) {
+                    try {
+                        const hasReviewed = await apiCall(`${REVIEW_API_URL}/check/${clientId}/${task.id}`);
+                        hasReviewedMap[task.id] = hasReviewed;
+                    } catch (error) {
+                        console.error(`Error checking review status for task ${task.id}:`, error);
+                        hasReviewedMap[task.id] = false;
+                    }
+                }
+            }
+        }
+
+        renderTasks(tasks, freelancerProposals, hasReviewedMap);
     } catch (error) {
         console.error("Error loading tasks:", error.message);
+        alert("Error loading tasks: " + error.message);
     }
 }
 
 // ===================== Render Tasks =====================
-function renderTasks(tasks, freelancerProposals = []) {
+function renderTasks(tasks, freelancerProposals = [], hasReviewedMap = {}) {
     taskCardContainer.innerHTML = "";
 
     // Create a map of tasks with their accepted proposals
@@ -97,6 +151,37 @@ function renderTasks(tasks, freelancerProposals = []) {
                     <i class="fas fa-trash"></i> Delete
                 </button>
             `;
+
+            // Add review button for completed tasks that haven't been reviewed yet
+            if (task.status === "COMPLETED" && task.freelancerId && !hasReviewedMap[task.id]) {
+                actionButtons += `
+                    <button class="btn btn-info ms-2" onclick="openReviewModal(${task.id}, ${task.freelancerId})">
+                        <i class="fas fa-star"></i> Review Freelancer
+                    </button>
+                `;
+            }
+
+            // Show if already reviewed
+            if (task.status === "COMPLETED" && task.freelancerId && hasReviewedMap[task.id]) {
+                actionButtons += `
+                    <span class="badge bg-success ms-2">
+                        <i class="fas fa-check"></i> Reviewed
+                    </span>
+                `;
+            }
+
+            // Add chat button if freelancer assigned task
+            if (task.freelancerId || task.status === "IN_PROGRESS") {
+                const receiverName = task.freelancerName || `Freelancer ${task.freelancerId}`;
+                actionButtons += `
+                    <button class="btn btn-outline-primary ms-2" 
+                            onclick="openChat(${task.id}, ${task.freelancerId}, '${receiverName}')" 
+                            title="Chat with Freelancer">
+                        <i class="fas fa-comments"></i>
+                    </button>
+                `;
+            }
+
         } else if (role === "ADMIN") {
             actionButtons = `
                 <button class="btn btn-danger" onclick="deleteTask(${task.id})">
@@ -155,6 +240,18 @@ function renderTasks(tasks, freelancerProposals = []) {
                     `;
                 }
             }
+
+            // Add chat button if proposal is accepted
+            if (isAssigned && task.clientId) {
+                const clientName = task.clientName || `Client ${task.clientId}`;
+                actionButtons += `
+                    <button class="btn btn-outline-primary ms-2" 
+                            onclick="openChat(${task.id}, ${task.clientId}, '${clientName}')" 
+                            title="Chat with Client">
+                        <i class="fas fa-comments"></i>
+                    </button>
+                `;
+            }
         }
 
         card.innerHTML = `
@@ -168,6 +265,7 @@ function renderTasks(tasks, freelancerProposals = []) {
                     ${task.workUrl ? `<p class="card-text"><strong>Work URL:</strong> <a href="${task.workUrl}" target="_blank" 
                         style="background-color: #7082bb; color: white; padding: 10px; text-decoration: none; border-radius: 8px">
                             View Work</a></p>` : ''}
+                    ${task.freelancerId && role === "CLIENT" ? `<p class="card-text"><strong>Freelancer ID:</strong> ${task.freelancerId}</p>` : ''}
                     <div class="d-flex justify-content-end gap-2">
                         ${actionButtons}
                     </div>
@@ -176,6 +274,16 @@ function renderTasks(tasks, freelancerProposals = []) {
         `;
 
         taskCardContainer.appendChild(card);
+    });
+
+    taskCardContainer.addEventListener('click', (e) => {
+        const chatButton = e.target.closest('.chat-button');
+        if (chatButton) {
+            const taskId = chatButton.getAttribute('data-task-id');
+            const receiverId = chatButton.getAttribute('data-receiver-id');
+            console.log("Opening chat for taskId:", taskId, "receiverId:", receiverId);
+            openChat(taskId, receiverId);
+        }
     });
 }
 
@@ -198,6 +306,7 @@ if (taskForm) {
             loadTasks();
         } catch (error) {
             console.error("Error creating task:", error.message);
+            alert("Error creating task: " + error.message);
         }
     });
 }
@@ -211,24 +320,30 @@ async function deleteTask(taskId) {
         loadTasks();
     } catch (error) {
         console.error("Error deleting task:", error.message);
+        alert("Error deleting task: " + error.message);
     }
 }
 
 // ===================== Edit Task =====================
 async function editTask(taskId) {
-    const task = await apiCall(`${TASK_API_BASE}/${taskId}`);
-    if (!task) return alert("Task not found");
+    try {
+        const task = await apiCall(`${TASK_API_BASE}/${taskId}`);
+        if (!task) return alert("Task not found");
 
-    await populateCategories();  // categories loaded first
+        await populateCategories();  // categories loaded first
 
-    document.getElementById("editTaskId").value = task.id;
-    document.getElementById("editTaskTitle").value = task.title;
-    document.getElementById("editTaskDescription").value = task.description;
-    document.getElementById("editTaskDeadline").value = task.deadline;
-    document.getElementById("editTaskCategory").value = task.taskCategoryName;
+        document.getElementById("editTaskId").value = task.id;
+        document.getElementById("editTaskTitle").value = task.title;
+        document.getElementById("editTaskDescription").value = task.description;
+        document.getElementById("editTaskDeadline").value = task.deadline;
+        document.getElementById("editTaskCategory").value = task.taskCategoryName;
 
-    const modal = new bootstrap.Modal(document.getElementById("editTaskModal"));
-    modal.show();
+        const modal = new bootstrap.Modal(document.getElementById("editTaskModal"));
+        modal.show();
+    } catch (error) {
+        console.error("Error loading task:", error.message);
+        alert("Error loading task: " + error.message);
+    }
 }
 
 // Handle form submit
@@ -253,6 +368,7 @@ document.getElementById("editTaskForm").addEventListener("submit", async e => {
         loadTasks();
     } catch (error) {
         console.error("Error updating task:", error.message);
+        alert("Error updating task: " + error.message);
     }
 });
 
@@ -333,9 +449,8 @@ if (proposalForm) {
                 freelancerId: Number(localStorage.getItem("userId"))
             };
 
-            true,
-                // Send proposal to backend
-                await apiCall(PROPOSAL_API_URL, "POST", proposalData);
+            // Send proposal to backend
+            await apiCall(PROPOSAL_API_URL, "POST", proposalData);
 
             alert("Proposal submitted successfully!");
             proposalForm.reset();
@@ -426,5 +541,59 @@ async function submitWork() {
     } catch (error) {
         console.error("Error submitting work:", error);
         alert("Error submitting work. Please try again later.");
+    }
+}
+
+// ===================== Open Review Modal =====================
+function openReviewModal(taskId, freelancerId) {
+    document.getElementById("reviewTaskId").value = taskId;
+    document.getElementById("reviewFreelancerId").value = freelancerId;
+
+    // Reset form
+    document.getElementById("ratingValue").value = "";
+    document.getElementById("reviewComment").value = "";
+
+    // Reset stars
+    const stars = document.querySelectorAll('.rating-stars i');
+    stars.forEach(star => star.classList.remove('active'));
+
+    const modal = new bootstrap.Modal(document.getElementById("reviewModal"));
+    modal.show();
+}
+
+// ===================== Submit Review =====================
+async function submitReview() {
+    const taskId = document.getElementById("reviewTaskId").value;
+    const freelancerId = document.getElementById("reviewFreelancerId").value;
+    const rating = document.getElementById("ratingValue").value;
+    const comment = document.getElementById("reviewComment").value;
+
+    if (!rating) {
+        alert("Please provide a rating");
+        return;
+    }
+
+    if (!comment) {
+        alert("Please provide a comment");
+        return;
+    }
+
+    try {
+        const reviewData = {
+            taskId: Number(taskId),
+            freelancerId: Number(freelancerId),
+            clientId: Number(localStorage.getItem("userId")),
+            rating: Number(rating),
+            comment: comment
+        };
+
+        await apiCall(REVIEW_API_URL, "POST", reviewData);
+
+        alert("Review submitted successfully!");
+        bootstrap.Modal.getInstance(document.getElementById("reviewModal")).hide();
+        loadTasks();
+    } catch (error) {
+        console.error("Error submitting review:", error.message);
+        alert("Failed to submit review: " + error.message);
     }
 }
