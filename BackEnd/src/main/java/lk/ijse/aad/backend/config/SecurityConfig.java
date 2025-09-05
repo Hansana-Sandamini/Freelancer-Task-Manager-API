@@ -35,7 +35,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeHttpRequests(auth->auth.requestMatchers("/api/v1/auth/**").permitAll()
+                .authorizeHttpRequests(auth->auth
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/chat/**", "/chat/info").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session->
                         session.sessionCreationPolicy
