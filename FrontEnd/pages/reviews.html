@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskFlow | Proposals</title>
+    <title>TaskFlow | Reviews</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
@@ -12,7 +12,43 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/Freelancer-Task-Manager-API/FrontEnd/css/styles.css">
     <link rel="stylesheet" href="/Freelancer-Task-Manager-API/FrontEnd/css/dashboard.css">
-    <link rel="stylesheet" href="/Freelancer-Task-Manager-API/FrontEnd/css/proposals.css">
+    <style>
+        .rating-stars {
+            color: #ddd;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .rating-stars .active,
+        .rating-stars:hover {
+            color: #ffc107;
+        }
+        .review-card {
+            transition: transform 0.2s;
+            border-left: 4px solid #0d6efd;
+        }
+        .review-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .stats-card {
+            background: linear-gradient(45deg, #4e73df, #224abe);
+            color: white;
+            border-radius: 10px;
+        }
+        .star-filled {
+            color: #ffc107;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .badge-status {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+    </style>
 </head>
 <body>
 <!-- Top Bar -->
@@ -35,10 +71,10 @@
                     <li><hr class="dropdown-divider"></li>
                     <li class="notification-item unread p-2">
                         <div class="d-flex justify-content-between">
-                            <span class="fw-medium">New proposal received</span>
+                            <span class="fw-medium">New task received</span>
                             <small class="text-muted">10m ago</small>
                         </div>
-                        <small class="text-muted">You've received a proposal for "Website Redesign" project</small>
+                        <small class="text-muted">You've been received task, "Website Redesign" project</small>
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-center text-primary" href="#">View all notifications</a></li>
@@ -65,9 +101,7 @@
                     <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Settings</a></li>
                     <li><a class="dropdown-item" href="#"><i class="fas fa-question-circle me-2"></i> Help</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="/Freelancer-Task-Manager-API/FrontEnd/index.html">
-                        <i class="fas fa-sign-out-alt me-2"></i> Logout</a>
-                    </li>
+                    <li><a class="dropdown-item" href="/FrontEnd/index.html"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                 </ul>
             </div>
         </div>
@@ -81,6 +115,7 @@
         <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar">
             <div class="position-sticky pt-3">
                 <ul class="nav flex-column" id="sidebarMenu">
+
                     <!-- Admin Sidebar -->
                     <nav id="sidebar-admin">
                         <li class="nav-item">
@@ -99,7 +134,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="/Freelancer-Task-Manager-API/FrontEnd/pages/proposals.html">
+                            <a class="nav-link" href="/Freelancer-Task-Manager-API/FrontEnd/pages/proposals.html">
                                 <i class="fas fa-file-signature me-2"></i> Proposals
                             </a>
                         </li>
@@ -138,7 +173,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="/Freelancer-Task-Manager-API/FrontEnd/pages/proposals.html">
+                            <a class="nav-link" href="/Freelancer-Task-Manager-API/FrontEnd/pages/proposals.html">
                                 <i class="fas fa-file-signature me-2"></i> Proposals
                             </a>
                         </li>
@@ -177,7 +212,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="/Freelancer-Task-Manager-API/FrontEnd/pages/proposals.html">
+                            <a class="nav-link" href="/Freelancer-Task-Manager-API/FrontEnd/pages/proposals.html">
                                 <i class="fas fa-file-signature me-2"></i> My Proposals
                             </a>
                         </li>
@@ -187,7 +222,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/Freelancer-Task-Manager-API/FrontEnd/pages/reviews.html">
+                            <a class="nav-link active" href="/Freelancer-Task-Manager-API/FrontEnd/pages/reviews.html">
                                 <i class="fas fa-star me-2"></i> Reviews
                             </a>
                         </li>
@@ -202,68 +237,198 @@
                             </a>
                         </li>
                     </nav>
+
                 </ul>
             </div>
         </nav>
 
         <!-- Main Content Area -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <!-- Header -->
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Proposals Management</h1>
+                <h1 class="h2">Review Management</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button id="btn-refresh" type="button" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
+                </div>
             </div>
 
-            <!-- Proposals Card Container -->
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-2 g-4 mt-4" id="proposalCardContainer">
-                <!-- Proposal cards will be populated dynamically -->
+            <!-- Stats Cards -->
+            <div class="row mb-4" id="statsContainer">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card h-100 py-2 px-3">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">Total Reviews</div>
+                                <div class="h5 mb-0 font-weight-bold" id="totalReviews">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-star fa-2x text-white-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card h-100 py-2 px-3">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">Average Rating</div>
+                                <div class="h5 mb-0 font-weight-bold" id="avgRating">0.0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-chart-line fa-2x text-white-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card h-100 py-2 px-3">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">Pending Reviews</div>
+                                <div class="h5 mb-0 font-weight-bold" id="pendingReviews">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-clock fa-2x text-white-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card h-100 py-2 px-3">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">This Month</div>
+                                <div class="h5 mb-0 font-weight-bold" id="monthReviews">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-calendar fa-2x text-white-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Filters Section (Visible to Admin and Freelancer) -->
+            <div class="row mb-4 filter-section" id="filterSection">
+                <div class="col-md-12">
+                    <h5 class="mb-3">Filter Reviews</h5>
+                    <form id="filterForm" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="ratingFilter" class="form-label">Rating</label>
+                            <select class="form-select" id="ratingFilter">
+                                <option value="">All Ratings</option>
+                                <option value="5">5 Stars</option>
+                                <option value="4">4 Stars</option>
+                                <option value="3">3 Stars</option>
+                                <option value="2">2 Stars</option>
+                                <option value="1">1 Star</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3" id="taskFilterContainer">
+                            <label for="taskFilter" class="form-label">Task</label>
+                            <select class="form-select" id="taskFilter">
+                                <option value="">All Tasks</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3" id="dateFilterContainer">
+                            <label for="dateFilter" class="form-label">Date</label>
+                            <select class="form-select" id="dateFilter">
+                                <option value="">All Time</option>
+                                <option value="7">Last 7 Days</option>
+                                <option value="30">Last 30 Days</option>
+                                <option value="90">Last 90 Days</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary me-2" id="applyFilters">Apply Filters</button>
+                            <button type="button" class="btn btn-outline-secondary" id="clearFilters">Clear</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Reviews List -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Reviews</h6>
+                    <div id="reviewActions"></div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" id="reviewsTableContainer">
+                        <div id="noReviewsMessage" class="alert alert-info d-none">
+                            No reviews found.
+                            <span id="clientMessage" class="d-none">Complete some tasks to receive reviews.</span>
+                            <span id="freelancerMessage" class="d-none">You haven't received any reviews yet.</span>
+                            <span id="adminMessage" class="d-none">No reviews have been submitted yet.</span>
+                        </div>
+                        <div class="row" id="reviewsContainer">
+                            <!-- Reviews will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center" id="pagination">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Previous</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
         </main>
     </div>
 </div>
 
-<!-- Proposal Details / Edit Modal -->
-<div class="modal fade" id="proposalDetailsModal" tabindex="-1" aria-labelledby="proposalDetailsModalLabel" aria-hidden="true">
+<!-- Review Detail Modal -->
+<div class="modal fade" id="reviewDetailModal" tabindex="-1" aria-labelledby="reviewDetailModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="proposalDetailsModalLabel">Proposal Details</h5>
+                <h5 class="modal-title" id="reviewDetailModalLabel">Review Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="proposalEditForm">
-                    <input type="hidden" id="modalProposalId">
-                    <div class="mb-3">
-                        <h6>Task Title</h6>
-                        <p id="modalTaskTitle" class="text-muted"></p>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Task:</strong> <span id="detailTaskTitle"></span>
                     </div>
-                    <div class="mb-3">
-                        <h6>Freelancer</h6>
-                        <p id="modalFreelancer" class="text-muted"></p>
+                    <div class="col-md-6">
+                        <strong>Date:</strong> <span id="detailDate"></span>
                     </div>
-                    <div class="mb-3">
-                        <label for="modalCoverLetter" class="form-label">Cover Letter</label>
-                        <textarea class="form-control" id="modalCoverLetter" rows="4" readonly></textarea>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Client:</strong> <span id="detailClient"></span>
                     </div>
-                    <div class="mb-3">
-                        <label for="modalBidAmount" class="form-label">Bid Amount (Rs)</label>
-                        <input type="number" class="form-control" id="modalBidAmount" step="0.01" readonly>
+                    <div class="col-md-6">
+                        <strong>Freelancer:</strong> <span id="detailFreelancer"></span>
                     </div>
-                    <div class="mb-3">
-                        <h6>Submitted At</h6>
-                        <p id="modalSubmittedAt" class="text-muted"></p>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <strong>Rating:</strong>
+                        <span id="detailRating"></span>
                     </div>
-                    <div class="mb-3">
-                        <h6>Status</h6>
-                        <p id="modalStatus" class="text-muted"></p>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <strong>Comment:</strong>
+                        <p id="detailComment" class="p-3 bg-light rounded"></p>
                     </div>
-                </form>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary d-none" id="editProposalBtn">Edit</button>
-                <button type="submit" class="btn btn-primary d-none" id="saveProposalBtn" form="proposalEditForm">Save Changes</button>
-                <button type="button" class="btn btn-danger d-none" id="deleteProposalBtn">Delete</button>
-                <button type="button" class="btn btn-success d-none" id="acceptProposalBtn">Accept</button>
-                <button type="button" class="btn btn-danger d-none" id="rejectProposalBtn">Reject</button>
+                <button type="button" class="btn btn-danger d-none" id="deleteReviewBtn">Delete Review</button>
             </div>
         </div>
     </div>
@@ -276,7 +441,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.js"></script>
 <script src="/Freelancer-Task-Manager-API/FrontEnd/js/navbar.js"></script>
 <script src="/Freelancer-Task-Manager-API/FrontEnd/js/dashboard.js"></script>
-<script src="/Freelancer-Task-Manager-API/FrontEnd/js/proposals.js"></script>
 
 </body>
 </html>
