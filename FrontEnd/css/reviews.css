@@ -1,0 +1,42 @@
+.rating-stars {
+    color: #ddd;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.rating-stars .active,
+.rating-stars:hover {
+    color: #ffc107;
+}
+
+.review-card {
+    transition: transform 0.2s;
+    border-left: 4px solid #0d6efd;
+}
+
+.review-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.stats-card {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    color: white;
+    border-radius: 10px;
+}
+
+.star-filled {
+    color: #ffc107;
+}
+
+.filter-section {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.badge-status {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
