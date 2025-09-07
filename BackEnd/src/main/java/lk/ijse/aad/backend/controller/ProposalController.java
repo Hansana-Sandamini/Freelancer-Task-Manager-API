@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/proposals")
@@ -126,6 +127,61 @@ public class ProposalController {
                 200,
                 "Proposal Rejected Successfully",
                 null
+        ));
+    }
+
+    @GetMapping("/count")
+    @PreAuthorize("hasAnyRole('CLIENT', 'FREELANCER', 'ADMIN')")
+    public ResponseEntity<ApiResponse> getProposalCounts() {
+        Map<String, Long> counts = proposalService.getProposalCounts();
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Proposal counts retrieved successfully",
+                counts
+        ));
+    }
+
+    @GetMapping("/count/freelancer/{freelancerId}")
+    @PreAuthorize("hasAnyRole('FREELANCER', 'ADMIN')")
+    public ResponseEntity<ApiResponse> getFreelancerProposalCounts(@PathVariable Long freelancerId) {
+        Map<String, Long> counts = proposalService.getFreelancerProposalCounts(freelancerId);
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Freelancer proposal counts retrieved successfully",
+                counts
+        ));
+    }
+
+    @GetMapping("/count/task/{taskId}")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    public ResponseEntity<ApiResponse> getTaskProposalCounts(@PathVariable Long taskId) {
+        Map<String, Long> counts = proposalService.getTaskProposalCounts(taskId);
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Task proposal counts retrieved successfully",
+                counts
+        ));
+    }
+
+    @GetMapping("/earnings/freelancer/{freelancerId}")
+    @PreAuthorize("hasAnyRole('FREELANCER', 'ADMIN')")
+    public ResponseEntity<ApiResponse> getFreelancerEarnings(@PathVariable Long freelancerId) {
+        double earnings = proposalService.getFreelancerEarnings(freelancerId);
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Freelancer earnings retrieved successfully",
+                earnings
+        ));
+    }
+
+    @GetMapping("/count/client/{clientId}")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<ApiResponse> getClientProposalCounts(@PathVariable Long clientId) {
+        Map<String, Long> counts = proposalService.getClientProposalCounts(clientId);
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Client proposal counts retrieved successfully",
+                counts
         ));
     }
 
