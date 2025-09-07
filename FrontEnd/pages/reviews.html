@@ -12,43 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/Freelancer-Task-Manager-API/FrontEnd/css/styles.css">
     <link rel="stylesheet" href="/Freelancer-Task-Manager-API/FrontEnd/css/dashboard.css">
-    <style>
-        .rating-stars {
-            color: #ddd;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-        .rating-stars .active,
-        .rating-stars:hover {
-            color: #ffc107;
-        }
-        .review-card {
-            transition: transform 0.2s;
-            border-left: 4px solid #0d6efd;
-        }
-        .review-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .stats-card {
-            background: linear-gradient(45deg, #4e73df, #224abe);
-            color: white;
-            border-radius: 10px;
-        }
-        .star-filled {
-            color: #ffc107;
-        }
-        .filter-section {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-        }
-        .badge-status {
-            font-size: 0.8rem;
-            padding: 5px 10px;
-            border-radius: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="/Freelancer-Task-Manager-API/FrontEnd/css/reviews.css">
 </head>
 <body>
 <!-- Top Bar -->
@@ -144,6 +108,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link active" href="/Freelancer-Task-Manager-API/FrontEnd/pages/reviews.html">
+                                <i class="fas fa-star me-2"></i> Reviews
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="/Freelancer-Task-Manager-API/FrontEnd/pages/users.html">
                                 <i class="fas fa-users me-2"></i> Users
                             </a>
@@ -180,6 +149,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="#">
                                 <i class="fas fa-credit-card me-2"></i> Payments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/Freelancer-Task-Manager-API/FrontEnd/pages/reviews.html">
+                                <i class="fas fa-star me-2"></i> Reviews
                             </a>
                         </li>
                         <li class="nav-item">
@@ -359,9 +333,9 @@
                     <div class="table-responsive" id="reviewsTableContainer">
                         <div id="noReviewsMessage" class="alert alert-info d-none">
                             No reviews found.
-                            <span id="clientMessage" class="d-none">Complete some tasks to receive reviews.</span>
-                            <span id="freelancerMessage" class="d-none">You haven't received any reviews yet.</span>
-                            <span id="adminMessage" class="d-none">No reviews have been submitted yet.</span>
+                            <span id="clientMessage" class="d-none">You haven't reviewed any tasks yet. Once you complete a task with a freelancer, you can share your experience here.</span>
+                            <span id="freelancerMessage" class="d-none">No reviews received yet. Your reviews will appear here once clients rate your completed work.</span>
+                            <span id="adminMessage" class="d-none">No reviews in the system. Reviews will appear here once clients start rating freelancers.</span>
                         </div>
                         <div class="row" id="reviewsContainer">
                             <!-- Reviews will be populated here -->
@@ -441,6 +415,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.js"></script>
 <script src="/Freelancer-Task-Manager-API/FrontEnd/js/navbar.js"></script>
 <script src="/Freelancer-Task-Manager-API/FrontEnd/js/dashboard.js"></script>
+<script src="/Freelancer-Task-Manager-API/FrontEnd/js/reviews.js"></script>
 
 </body>
 </html>
