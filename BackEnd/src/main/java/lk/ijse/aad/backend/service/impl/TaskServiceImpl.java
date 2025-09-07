@@ -16,7 +16,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -265,6 +267,32 @@ public class TaskServiceImpl implements TaskService {
         }
 
         return dto;
+    }
+
+    @Override
+    public Map<String, Long> getTaskCounts() {
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("allTasks", (long) taskRepository.findAll().size());
+        counts.put("completedTasks", taskRepository.countByStatus(TaskStatus.COMPLETED));
+        return counts;
+    }
+
+    @Override
+    public Map<String, Long> getClientTaskCounts(Long clientId) {
+        Map<String, Long> counts = new HashMap<>();
+        List<Task> tasks = taskRepository.findByClientId(clientId);
+        counts.put("myTasks", (long) tasks.size());
+        counts.put("completedTasks", tasks.stream().filter(t -> t.getStatus() == TaskStatus.COMPLETED).count());
+        return counts;
+    }
+
+    @Override
+    public Map<String, Long> getFreelancerTaskCounts(Long freelancerId) {
+        Map<String, Long> counts = new HashMap<>();
+        List<Task> tasks = taskRepository.findByFreelancerId(freelancerId);
+        counts.put("activeTasks", tasks.stream().filter(t -> t.getStatus() == TaskStatus.IN_PROGRESS).count());
+        counts.put("completedTasks", tasks.stream().filter(t -> t.getStatus() == TaskStatus.COMPLETED).count());
+        return counts;
     }
 
 }

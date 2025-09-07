@@ -1,6 +1,7 @@
 package lk.ijse.aad.backend.repository;
 
 import lk.ijse.aad.backend.entity.Task;
+import lk.ijse.aad.backend.entity.TaskStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,7 +21,11 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     Optional<Task> findByIdWithFreelancer(@Param("id") Long id);
 
     List<Task> findByClientId(Long clientId);
-    List<Task> findByFreelancerId(Long freelancerId);
     List<Task> findByStatus(String status);
     long countByTaskCategoryId(Long categoryId);
+
+    Long countByStatus(TaskStatus status);
+
+    @Query("SELECT t FROM Task t WHERE t.freelancer.id = :freelancerId")
+    List<Task> findByFreelancerId(@Param("freelancerId") Long freelancerId);
 }

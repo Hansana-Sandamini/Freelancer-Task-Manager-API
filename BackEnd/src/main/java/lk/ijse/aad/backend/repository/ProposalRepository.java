@@ -1,6 +1,8 @@
 package lk.ijse.aad.backend.repository;
 
 import lk.ijse.aad.backend.entity.Proposal;
+import lk.ijse.aad.backend.entity.ProposalStatus;
+import lk.ijse.aad.backend.entity.TaskStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,4 +22,6 @@ public interface ProposalRepository extends JpaRepository<Proposal,Long> {
     @EntityGraph(attributePaths = {"freelancer", "task", "task.client"})
     @Query("SELECT p FROM Proposal p WHERE p.id = :id")
     Optional<Proposal> findByIdWithFreelancerAndTask(@Param("id") Long id);
+
+    Long countByStatus(ProposalStatus status);
 }

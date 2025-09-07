@@ -14,7 +14,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -261,6 +263,57 @@ public class ProposalServiceImpl implements ProposalService {
         dto.setTaskId(proposal.getTask().getId());
         dto.setTaskTitle(proposal.getTask().getTitle());
         return dto;
+    }
+
+    @Override
+    public Map<String, Long> getProposalCounts() {
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("allProposals", proposalRepository.count());
+        counts.put("acceptedProposals", proposalRepository.countByStatus(ProposalStatus.ACCEPTED));
+        counts.put("rejectedProposals", proposalRepository.countByStatus(ProposalStatus.REJECTED));
+        return counts;
+    }
+
+    @Override
+    public Map<String, Long> getFreelancerProposalCounts(Long freelancerId) {
+        Map<String, Long> counts = new HashMap<>();
+        List<Proposal> proposals = proposalRepository.findByFreelancerId(freelancerId);
+        counts.put("myProposals", (long) proposals.size());
+        counts.put("acceptedProposals", proposals.stream().filter(p -> p.getStatus() == ProposalStatus.ACCEPTED).count());
+        counts.put("rejectedProposals", proposals.stream().filter(p -> p.getStatus() == ProposalStatus.REJECTED).count());
+        return counts;
+    }
+
+    @Override
+    public Map<String, Long> getTaskProposalCounts(Long taskId) {
+        Map<String, Long> counts = new HashMap<>();
+        List<Proposal> proposals = proposalRepository.findByTaskId(taskId);
+        counts.put("allProposals", (long) proposals.size());
+        counts.put("acceptedProposals", proposals.stream().filter(p -> p.getStatus().equals("ACCEPTED")).count());
+        counts.put("rejectedProposals", proposals.stream().filter(p -> p.getStatus().equals("REJECTED")).count());
+        return counts;
+    }
+
+    @Override
+    public double getFreelancerEarnings(Long freelancerId) {
+        LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        List<Proposal> proposals = proposalRepository.findByFreelancerId(freelancerId);
+        return proposals.stream()
+                .filter(p -> p.getStatus() == ProposalStatus.ACCEPTED)
+                .filter(p -> p.getTask().getStatus() == TaskStatus.COMPLETED)
+                .filter(p -> p.getSubmittedAt().isAfter(startOfMonth))
+                .mapToDouble(Proposal::getBidAmount)
+                .sum();
+    }
+
+    @Override
+    public Map<String, Long> getClientProposalCounts(Long clientId) {
+        Map<String, Long> counts = new HashMap<>();
+        List<Proposal> proposals = proposalRepository.findByTaskClientId(clientId);
+        counts.put("allProposals", (long) proposals.size());
+        counts.put("acceptedProposals", proposals.stream().filter(p -> p.getStatus() == ProposalStatus.ACCEPTED).count());
+        counts.put("rejectedProposals", proposals.stream().filter(p -> p.getStatus() == ProposalStatus.REJECTED).count());
+        return counts;
     }
 
 }

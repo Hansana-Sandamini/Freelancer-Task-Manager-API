@@ -103,4 +103,37 @@ public class TaskController {
         ));
     }
 
+    @GetMapping("/count")
+    @PreAuthorize("hasAnyRole('CLIENT', 'FREELANCER', 'ADMIN')")
+    public ResponseEntity<ApiResponse> getTaskCounts() {
+        Map<String, Long> counts = taskService.getTaskCounts();
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Task counts retrieved successfully",
+                counts
+        ));
+    }
+
+    @GetMapping("/count/client/{clientId}")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    public ResponseEntity<ApiResponse> getClientTaskCounts(@PathVariable Long clientId) {
+        Map<String, Long> counts = taskService.getClientTaskCounts(clientId);
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Client task counts retrieved successfully",
+                counts
+        ));
+    }
+
+    @GetMapping("/count/freelancer/{freelancerId}")
+    @PreAuthorize("hasAnyRole('FREELANCER', 'ADMIN')")
+    public ResponseEntity<ApiResponse> getFreelancerTaskCounts(@PathVariable Long freelancerId) {
+        Map<String, Long> counts = taskService.getFreelancerTaskCounts(freelancerId);
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Freelancer task counts retrieved successfully",
+                counts
+        ));
+    }
+
 }

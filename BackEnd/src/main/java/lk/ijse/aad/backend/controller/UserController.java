@@ -2,6 +2,7 @@ package lk.ijse.aad.backend.controller;
 
 import lk.ijse.aad.backend.dto.ApiResponse;
 import lk.ijse.aad.backend.dto.UserDTO;
+import lk.ijse.aad.backend.repository.UserRepository;
 import lk.ijse.aad.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -117,6 +119,17 @@ public class UserController {
                 200,
                 "Profile updated successfully",
                 null
+        ));
+    }
+
+    @GetMapping("/count")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> getUserCount() {
+        long count = userRepository.count();
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "User count retrieved successfully",
+                count
         ));
     }
 
