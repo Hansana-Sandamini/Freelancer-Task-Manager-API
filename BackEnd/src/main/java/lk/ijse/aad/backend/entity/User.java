@@ -29,6 +29,14 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;  // ADMIN, FREELANCER, CLIENT
 
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    private String company;
+
+    @Column(columnDefinition = "TEXT")
+    private String skills;
+
     @OneToMany(mappedBy = "client")
     private List<Payment> paymentsMade;
 

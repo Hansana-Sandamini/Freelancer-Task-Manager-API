@@ -11,4 +11,5 @@ public interface UserService {
     List<UserDTO> getFreelancers();
     UserDTO getUserById(Long id);
     UserDTO getFreelancerById(Long id);
+    UserDTO getCurrentUserProfile();
 }

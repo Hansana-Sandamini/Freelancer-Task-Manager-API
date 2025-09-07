@@ -8,6 +8,7 @@ import lk.ijse.aad.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +47,12 @@ public class UserServiceImpl implements UserService {
             // Update fields
             existingUser.setName(userDTO.getName());
             existingUser.setEmail(userDTO.getEmail());
+
+            // Update role-specific fields
+            existingUser.setBio(userDTO.getBio());
+            existingUser.setCompany(userDTO.getCompany());
+            existingUser.setSkills(userDTO.getSkills());
+
             if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
                 existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
             }
@@ -115,11 +122,24 @@ public class UserServiceImpl implements UserService {
         return convertToDTO(user);
     }
 
+    @Override
+    public UserDTO getCurrentUserProfile() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = (User) userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return convertToDTO(user);
+    }
+
     private UserDTO convertToDTO(User user) {
         try {
             UserDTO userDTO = modelMapper.map(user, UserDTO.class);
             userDTO.setId(String.valueOf(user.getId()));
             userDTO.setRole(user.getRole().name());
+            userDTO.setBio(user.getBio());
+            userDTO.setCompany(user.getCompany());
+            userDTO.setSkills(user.getSkills());
             return userDTO;
         } catch (Exception e) {
             log.error("Error while converting user to DTO: {}", user.getEmail(), e);
