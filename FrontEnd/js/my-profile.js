@@ -1,8 +1,10 @@
-const PROFILE_API_BASE = 'http://localhost:8085/api/v1';
+const PROFILE_API_BASE = 'http://localhost:8085/api/v1/users';
 
 // Function to check authentication and redirect if not logged in
 function checkAuthentication() {
-    if (!localStorage.getItem('token')) {
+    const token = localStorage.getItem('token');
+    console.log('Token:', token);
+    if (!token) {
         window.location.href = '/Freelancer-Task-Manager-API/FrontEnd/index.html';
         return false;
     }
@@ -12,19 +14,25 @@ function checkAuthentication() {
 // Function to fetch user profile from API
 async function fetchUserProfile() {
     try {
-        const response = await fetch(`${PROFILE_API_BASE}/user/profile`, {
+        const token = localStorage.getItem('token');
+        console.log('Fetching profile with token:', token);
+        const response = await fetch(`${PROFILE_API_BASE}/profile`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${token}`
             }
         });
 
+        console.log('Response status:', response.status);
         if (!response.ok) {
-            throw new Error('Failed to fetch user profile');
+            const errorText = await response.text();
+            console.log('Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
 
         const result = await response.json();
+        console.log('Profile data:', result.data);
         return result.data;
     } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -35,7 +43,7 @@ async function fetchUserProfile() {
 // Function to update user profile via API
 async function updateUserProfile(profileData) {
     try {
-        const response = await fetch(`${PROFILE_API_BASE}/user/profile`, {
+        const response = await fetch(`${PROFILE_API_BASE}/profile`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -45,11 +53,12 @@ async function updateUserProfile(profileData) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to update user profile');
+            const errorText = await response.text();
+            throw new Error(`Failed to update user profile: ${errorText}`);
         }
 
         const result = await response.json();
-        return result.data;
+        return result;
     } catch (error) {
         console.error('Error updating user profile:', error);
         throw error;
@@ -62,6 +71,7 @@ async function loadUserProfile() {
 
     try {
         const userData = await fetchUserProfile();
+        console.log('User data received:', userData);
 
         // Populate the form with data from API
         const nameInput = document.getElementById('profileName');
@@ -108,10 +118,12 @@ async function loadUserProfile() {
         localStorage.setItem('name', userData.name);
         localStorage.setItem('email', userData.email);
         localStorage.setItem('role', userData.role);
+        if (userData.bio) localStorage.setItem('profile_bio', userData.bio);
+        if (userData.company) localStorage.setItem('profile_company', userData.company);
+        if (userData.skills) localStorage.setItem('profile_skills', userData.skills);
 
     } catch (error) {
         console.error('Error loading user profile:', error);
-        // Fallback to localStorage if API fails
         fallbackToLocalStorage();
     }
 }
@@ -129,6 +141,27 @@ function fallbackToLocalStorage() {
     if (nameInput) nameInput.value = userName;
     if (emailInput) emailInput.value = userEmail;
     if (roleInput) roleInput.value = userRole;
+
+    // Try to load role-specific data from localStorage
+    const bioInput = document.getElementById('profileBio');
+    const companyInput = document.getElementById('profileCompany');
+    const skillsInput = document.getElementById('profileSkills');
+
+    if (bioInput) bioInput.value = localStorage.getItem('profile_bio') || '';
+    if (companyInput) companyInput.value = localStorage.getItem('profile_company') || '';
+    if (skillsInput) skillsInput.value = localStorage.getItem('profile_skills') || '';
+
+    // Show appropriate fields based on role
+    const bioField = document.getElementById('bioField');
+    const companyField = document.getElementById('companyField');
+    const skillsField = document.getElementById('skillsField');
+
+    if (userRole === 'FREELANCER') {
+        if (bioField) bioField.classList.remove('d-none');
+        if (skillsField) skillsField.classList.remove('d-none');
+    } else if (userRole === 'CLIENT') {
+        if (companyField) companyField.classList.remove('d-none');
+    }
 
     alert('Could not load profile data. Using cached information.');
 }
@@ -170,15 +203,19 @@ function disableEditing() {
 // Function to save profile changes
 async function saveProfileChanges() {
     const userNameInput = document.getElementById('profileName');
+    const userEmailInput = document.getElementById('profileEmail');
     const userRole = localStorage.getItem('role');
 
-    if (!userNameInput) return;
+    if (!userNameInput || !userEmailInput) return;
 
     try {
+        // Include email in the update to avoid database constraint violation
         const profileData = {
-            name: userNameInput.value
+            name: userNameInput.value,
+            email: userEmailInput.value
         };
 
+        // Add role-specific fields
         if (userRole === 'FREELANCER') {
             const bioInput = document.getElementById('profileBio');
             const skillsInput = document.getElementById('profileSkills');
@@ -189,13 +226,13 @@ async function saveProfileChanges() {
             profileData.company = companyInput ? companyInput.value : '';
         }
 
-        const updatedUser = await updateUserProfile(profileData);
+        await updateUserProfile(profileData);
 
         // Update localStorage with new data
-        localStorage.setItem('name', updatedUser.name || userNameInput.value);
-        if (updatedUser.bio) localStorage.setItem('profile_bio', updatedUser.bio);
-        if (updatedUser.company) localStorage.setItem('profile_company', updatedUser.company);
-        if (updatedUser.skills) localStorage.setItem('profile_skills', updatedUser.skills);
+        localStorage.setItem('name', userNameInput.value);
+        if (profileData.bio) localStorage.setItem('profile_bio', profileData.bio);
+        if (profileData.company) localStorage.setItem('profile_company', profileData.company);
+        if (profileData.skills) localStorage.setItem('profile_skills', profileData.skills);
 
         alert('Profile updated successfully!');
         updateUserInfo();

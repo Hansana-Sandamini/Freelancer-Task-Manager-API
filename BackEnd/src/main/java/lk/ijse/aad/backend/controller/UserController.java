@@ -95,4 +95,29 @@ public class UserController {
         }
     }
 
+    @GetMapping("/profile")
+    @PreAuthorize("isAuthenticated()") // Ensure only authenticated users can access
+    public ResponseEntity<ApiResponse> getCurrentUserProfile() {
+        UserDTO user = userService.getCurrentUserProfile();
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Profile Retrieved Successfully",
+                user
+        ));
+    }
+
+    @PutMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse> updateCurrentUserProfile(@RequestBody UserDTO userDTO) {
+        UserDTO currentUser = userService.getCurrentUserProfile();
+        userDTO.setId(currentUser.getId());
+        userService.updateUser(userDTO);
+
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Profile updated successfully",
+                null
+        ));
+    }
+
 }
