@@ -20,3 +20,38 @@ footer {
     margin-top: auto;
     padding: 1.5rem 0;
 }
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    display: none;
+}
+
+.urgent-notification {
+    background-color: #fff5f5 !important;
+    border-left: 4px solid #dc3545 !important;
+}
+
+.warning-notification {
+    background-color: #fff9e6 !important;
+    border-left: 4px solid #ffc107 !important;
+}
+
+.unread-notification {
+    background-color: #f0f8ff !important;
+}
+
+.dropdown-item:hover {
+    background-color: #e9ecef !important;
+}
+
+.dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+}

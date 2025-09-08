@@ -7,6 +7,7 @@ import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.repository.AuthRepository;
 import lk.ijse.aad.backend.repository.UserRepository;
 import lk.ijse.aad.backend.service.EmailService;
+import lk.ijse.aad.backend.service.NotificationService;
 import lk.ijse.aad.backend.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,7 @@ public class TaskServiceImpl implements TaskService {
     private final TaskCategoryRepository taskCategoryRepository;
     private final ModelMapper modelMapper;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     @Override
     public void saveTask(TaskDTO taskDTO) {
@@ -53,11 +56,38 @@ public class TaskServiceImpl implements TaskService {
             // Send emails to all freelancers
             sendMailToFreelancers(task);
 
+            // Send notifications to all freelancers
+            sendNotificationsToFreelancers(task);
+
             log.info("Task saved successfully: {}", taskDTO.getTitle());
 
         } catch (Exception e) {
             log.error("Error while saving task: {}", taskDTO.getTitle(), e);
             throw new RuntimeException("Failed to save task: " + e.getMessage(), e);
+        }
+    }
+
+    @Async
+    protected void sendNotificationsToFreelancers(Task task) {
+        try {
+            List<User> freelancers = userRepository.findByRole(Role.FREELANCER);
+
+            for (User freelancer : freelancers) {
+                String message = "New task available: " + task.getTitle() +
+                        ". Deadline: " + task.getDeadline().format(DateTimeFormatter.ofPattern("MMM dd, yyyy"));
+
+                notificationService.createAndSendNotification(
+                        freelancer.getId(),
+                        message,
+                        NotificationType.TASK_ASSIGNED,
+                        task.getId(),
+                        task.getTitle()
+                );
+
+                log.info("Notification sent to freelancer: {} for task: {}", freelancer.getEmail(), task.getTitle());
+            }
+        } catch (Exception e) {
+            log.error("Error sending notifications to freelancers for task: {}", task.getTitle(), e);
         }
     }
 
@@ -200,6 +230,16 @@ public class TaskServiceImpl implements TaskService {
 
             // Send notification to client
             sendWorkSubmissionEmail(task);
+
+            // Create notification for client
+            String clientMessage = "Work has been submitted for your task: " + task.getTitle();
+            notificationService.createAndSendNotification(
+                    task.getClient().getId(),
+                    clientMessage,
+                    NotificationType.PROPOSAL_UPDATE,
+                    task.getId(),
+                    task.getTitle()
+            );
 
             log.info("Work submitted for task: {}", taskId);
 

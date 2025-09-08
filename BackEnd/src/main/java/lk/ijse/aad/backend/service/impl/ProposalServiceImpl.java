@@ -6,6 +6,7 @@ import lk.ijse.aad.backend.repository.ProposalRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.repository.AuthRepository;
 import lk.ijse.aad.backend.service.EmailService;
+import lk.ijse.aad.backend.service.NotificationService;
 import lk.ijse.aad.backend.service.ProposalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ public class ProposalServiceImpl implements ProposalService {
     private final TaskRepository taskRepository;
     private final ModelMapper modelMapper;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     @Override
     public void saveProposal(ProposalDTO proposalDTO) {
@@ -51,6 +53,16 @@ public class ProposalServiceImpl implements ProposalService {
 
             // Send email to client
             sendProposalEmailToClient(proposal.getId());
+
+            // Create notification for client
+            String message = "New proposal received for your task: " + task.getTitle();
+            notificationService.createAndSendNotification(
+                    task.getClient().getId(),
+                    message,
+                    NotificationType.PROPOSAL_UPDATE,
+                    task.getId(),
+                    task.getTitle()
+            );
 
             log.info("Proposal saved successfully for task: {}", task.getTitle());
 
@@ -166,10 +178,30 @@ public class ProposalServiceImpl implements ProposalService {
 
                 // Send rejection email to other freelancers
                 sendRejectionEmail(otherProposal);
+
+                // Create notification for freelancer
+                String message = "Your proposal for '" + proposal.getTask().getTitle() + "' has been rejected";
+                notificationService.createAndSendNotification(
+                        proposal.getFreelancer().getId(),
+                        message,
+                        NotificationType.PROPOSAL_UPDATE,
+                        proposal.getTask().getId(),
+                        proposal.getTask().getTitle()
+                );
             }
 
             // Send acceptance email
             sendAcceptanceEmail(proposal);
+
+            // Create notification for freelancer
+            String message = "Your proposal for '" + task.getTitle() + "' has been accepted!";
+            notificationService.createAndSendNotification(
+                    proposal.getFreelancer().getId(),
+                    message,
+                    NotificationType.PROPOSAL_UPDATE,
+                    task.getId(),
+                    task.getTitle()
+            );
 
             log.info("Proposal accepted successfully: {}", proposalId);
 
@@ -196,6 +228,16 @@ public class ProposalServiceImpl implements ProposalService {
 
             // Send rejection email
             sendRejectionEmail(proposal);
+
+            // Create notification for freelancer
+            String message = "Your proposal for '" + proposal.getTask().getTitle() + "' has been rejected";
+            notificationService.createAndSendNotification(
+                    proposal.getFreelancer().getId(),
+                    message,
+                    NotificationType.PROPOSAL_UPDATE,
+                    proposal.getTask().getId(),
+                    proposal.getTask().getTitle()
+            );
 
             log.info("Proposal rejected successfully: {}", proposalId);
 
