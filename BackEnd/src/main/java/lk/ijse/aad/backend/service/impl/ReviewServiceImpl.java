@@ -1,12 +1,14 @@
 package lk.ijse.aad.backend.service.impl;
 
 import lk.ijse.aad.backend.dto.ReviewDTO;
+import lk.ijse.aad.backend.entity.NotificationType;
 import lk.ijse.aad.backend.entity.Review;
 import lk.ijse.aad.backend.entity.Task;
 import lk.ijse.aad.backend.entity.User;
 import lk.ijse.aad.backend.repository.ReviewRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.repository.AuthRepository;
+import lk.ijse.aad.backend.service.NotificationService;
 import lk.ijse.aad.backend.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final AuthRepository authRepository;
     private final TaskRepository taskRepository;
     private final ModelMapper modelMapper;
+    private final NotificationService notificationService;
 
     @Override
     public void saveReview(ReviewDTO reviewDTO) {
@@ -69,6 +72,17 @@ public class ReviewServiceImpl implements ReviewService {
             review.setCreatedAt(LocalDateTime.now());
 
             reviewRepository.save(review);
+
+            // Create notification for freelancer
+            String message = "You received a new review for task: " + task.getTitle();
+            notificationService.createAndSendNotification(
+                    reviewDTO.getFreelancerId(),
+                    message,
+                    NotificationType.REVIEW_POSTED,
+                    task.getId(),
+                    task.getTitle()
+            );
+
             log.info("Review saved successfully for task: {} by client: {}", task.getTitle(), client.getName());
 
         } catch (Exception e) {

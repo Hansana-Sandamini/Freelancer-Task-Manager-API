@@ -46,6 +46,28 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public void createAndSendNotification(Long userId, String message, NotificationType type, Long taskId, String taskTitle) {
+        try {
+            NotificationDTO notificationDTO = new NotificationDTO();
+            notificationDTO.setUserId(userId);
+            notificationDTO.setMessage(message);
+            notificationDTO.setNotificationType(type.name());
+            notificationDTO.setTaskId(taskId);
+            notificationDTO.setTaskTitle(taskTitle);
+            notificationDTO.setCreatedAt(LocalDateTime.now());
+            notificationDTO.setRead(false);
+
+            saveNotification(notificationDTO);
+
+            log.info("Notification created and sent to user: {}, type: {}", userId, type);
+
+        } catch (Exception e) {
+            log.error("Error creating notification for user: {}, type: {}", userId, type, e);
+            throw new RuntimeException("Failed to create notification: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public void updateNotification(NotificationDTO notificationDTO) {
         try {
             Notification existingNotification = notificationRepository.findById(notificationDTO.getId())

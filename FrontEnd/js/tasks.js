@@ -4,7 +4,7 @@ const PROPOSAL_API_URL = "http://localhost:8085/api/v1/proposals";
 const REVIEW_API_URL = "http://localhost:8085/api/v1/reviews";
 import { openChat } from './chat.js';
 
-// Get token, role and email from localStorage
+// Get token, role, and email from localStorage
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
 const email = localStorage.getItem("email");
@@ -174,8 +174,10 @@ function renderTasks(tasks, freelancerProposals = [], hasReviewedMap = {}) {
             if (task.freelancerId || task.status === "IN_PROGRESS") {
                 const receiverName = task.freelancerName || `Freelancer ${task.freelancerId}`;
                 actionButtons += `
-                    <button class="btn btn-outline-primary ms-2" 
-                            onclick="openChat(${task.id}, ${task.freelancerId}, '${receiverName}')" 
+                    <button class="btn btn-outline-primary ms-2 chat-button" 
+                            data-task-id="${task.id}" 
+                            data-receiver-id="${task.freelancerId}" 
+                            data-receiver-name="${receiverName}" 
                             title="Chat with Freelancer">
                         <i class="fas fa-comments"></i>
                     </button>
@@ -206,7 +208,7 @@ function renderTasks(tasks, freelancerProposals = [], hasReviewedMap = {}) {
                 }
             } else {
                 actionButtons = `
-                    <button class="btn btn-outline-primary" onclick="openProposalModal(${task.id})">
+                    <button class="btn btn-outline-primary propose-button" data-task-id="${task.id}">
                         <i class="fas fa-paper-plane"></i> Propose
                     </button>`;
             }
@@ -245,8 +247,10 @@ function renderTasks(tasks, freelancerProposals = [], hasReviewedMap = {}) {
             if (isAssigned && task.clientId) {
                 const clientName = task.clientName || `Client ${task.clientId}`;
                 actionButtons += `
-                    <button class="btn btn-outline-primary ms-2" 
-                            onclick="openChat(${task.id}, ${task.clientId}, '${clientName}')" 
+                    <button class="btn btn-outline-primary ms-2 chat-button" 
+                            data-task-id="${task.id}" 
+                            data-receiver-id="${task.clientId}" 
+                            data-receiver-name="${clientName}" 
                             title="Chat with Client">
                         <i class="fas fa-comments"></i>
                     </button>
@@ -276,13 +280,23 @@ function renderTasks(tasks, freelancerProposals = [], hasReviewedMap = {}) {
         taskCardContainer.appendChild(card);
     });
 
+    // Add event listeners for propose and chat buttons
     taskCardContainer.addEventListener('click', (e) => {
+        const proposeButton = e.target.closest('.propose-button');
         const chatButton = e.target.closest('.chat-button');
+
+        if (proposeButton) {
+            const taskId = proposeButton.getAttribute('data-task-id');
+            console.log("Opening proposal modal for taskId:", taskId);
+            openProposalModal(taskId);
+        }
+
         if (chatButton) {
             const taskId = chatButton.getAttribute('data-task-id');
             const receiverId = chatButton.getAttribute('data-receiver-id');
+            const receiverName = chatButton.getAttribute('data-receiver-name');
             console.log("Opening chat for taskId:", taskId, "receiverId:", receiverId);
-            openChat(taskId, receiverId);
+            openChat(taskId, receiverId, receiverName);
         }
     });
 }

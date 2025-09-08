@@ -28,20 +28,14 @@
             <div class="dropdown me-4 position-relative">
                 <a href="#" class="text-white dropdown-toggle" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-bell fa-lg"></i>
-                    <span class="notification-badge">1</span>
+                    <span id="notificationBadge" class="notification-badge">0</span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="notificationDropdown" style="min-width: 350px;">
+                <ul id="notificationList" class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="notificationDropdown" style="min-width: 350px; max-height: 400px; overflow-y: auto;">
                     <li class="dropdown-item-text fw-bold">Notifications</li>
                     <li><hr class="dropdown-divider"></li>
-                    <li class="notification-item unread p-2">
-                        <div class="d-flex justify-content-between">
-                            <span class="fw-medium">New task received</span>
-                            <small class="text-muted">10m ago</small>
-                        </div>
-                        <small class="text-muted">You've been received task, "Website Redesign" project</small>
-                    </li>
+                    <li class="text-center text-muted" id="noNotifications">No new notifications</li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-center text-primary" href="#">View all notifications</a></li>
+                    <li><button class="dropdown-item text-center text-primary" id="viewAllNotifications">View all notifications</button></li>
                 </ul>
             </div>
 
@@ -458,6 +452,7 @@
 
 <!--<script src="/Freelancer-Task-Manager-API/FrontEnd/js/tasks.js"></script>-->
 <script type="module" src="/Freelancer-Task-Manager-API/FrontEnd/js/tasks.js"></script>
+<script src="/Freelancer-Task-Manager-API/FrontEnd/js/notifications.js"></script>
 
 </body>
 </html>
