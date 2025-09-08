@@ -31,7 +31,7 @@ public class DeadlineReminderServiceImpl implements DeadlineReminderService {
         try {
             LocalDateTime now = LocalDateTime.now();
 
-            // Check for tasks due in 1 day
+            // Tasks due in 1 day
             LocalDateTime oneDayLater = now.plusDays(1);
             List<Task> oneDayDeadlines = taskRepository.findByDeadlineBetweenAndStatus(
                     now.plusHours(23), oneDayLater.plusHours(1), TaskStatus.IN_PROGRESS
@@ -46,7 +46,7 @@ public class DeadlineReminderServiceImpl implements DeadlineReminderService {
                 }
             }
 
-            // Check for tasks due in 3 days
+            // Tasks due in 3 days
             LocalDateTime threeDaysLater = now.plusDays(3);
             List<Task> threeDayDeadlines = taskRepository.findByDeadlineBetweenAndStatus(
                     now.plusDays(2).plusHours(23), threeDaysLater.plusHours(1), TaskStatus.IN_PROGRESS
@@ -61,7 +61,7 @@ public class DeadlineReminderServiceImpl implements DeadlineReminderService {
                 }
             }
 
-            // Check for overdue tasks
+            // Overdue tasks
             List<Task> overdueTasks = taskRepository.findByDeadlineBeforeAndStatus(
                     now, TaskStatus.IN_PROGRESS
             );
@@ -74,7 +74,7 @@ public class DeadlineReminderServiceImpl implements DeadlineReminderService {
 
                     sendDeadlineNotification(task, message);
 
-                    // Also notify the client about overdue task
+                    // Also notify client
                     String clientMessage = "Task '" + task.getTitle() + "' assigned to " +
                             task.getFreelancer().getName() + " is OVERDUE. Due date: " +
                             task.getDeadline().format(DateTimeFormatter.ofPattern("MMM dd, yyyy"));
@@ -86,6 +86,15 @@ public class DeadlineReminderServiceImpl implements DeadlineReminderService {
                             task.getId(),
                             task.getTitle()
                     );
+
+                    // Send email to client too
+                    String clientSubject = "🚨 Overdue Task: " + task.getTitle();
+                    String clientEmail = "<h2>Overdue Task Alert</h2>" +
+                            "<p>" + clientMessage + "</p>" +
+                            "<p>Task: <b>" + task.getTitle() + "</b></p>" +
+                            "<p>Best regards,<br>The TaskFlow Team</p>";
+
+                    emailService.sendEmail(task.getClient().getEmail(), clientSubject, clientEmail);
                 }
             }
 
@@ -95,6 +104,7 @@ public class DeadlineReminderServiceImpl implements DeadlineReminderService {
     }
 
     private void sendDeadlineNotification(Task task, String message) {
+        // In-app notification
         notificationService.createAndSendNotification(
                 task.getFreelancer().getId(),
                 message,
@@ -102,6 +112,16 @@ public class DeadlineReminderServiceImpl implements DeadlineReminderService {
                 task.getId(),
                 task.getTitle()
         );
+
+        // Email notification
+        String subject = "⏰ Deadline Reminder: " + task.getTitle();
+        String emailMessage = "<h2>Deadline Reminder</h2>" +
+                "<p>" + message + "</p>" +
+                "<p>Task: <b>" + task.getTitle() + "</b></p>" +
+                "<p>Due Date: " + task.getDeadline().format(DateTimeFormatter.ofPattern("MMM dd, yyyy")) + "</p>" +
+                "<p>Best regards,<br>The TaskFlow Team</p>";
+
+        emailService.sendEmail(task.getFreelancer().getEmail(), subject, emailMessage);
 
         log.info("Deadline reminder sent for task: {}", task.getTitle());
     }
