@@ -11,6 +11,26 @@ const email = localStorage.getItem("email");
 
 const taskCardContainer = document.getElementById("taskCardContainer");
 const taskForm = document.getElementById("taskForm");
+const paginationContainer = document.getElementById("pagination");
+const categoryFilter = document.getElementById("categoryFilter");
+const statusFilter = document.getElementById("statusFilter");
+const dateFilter = document.getElementById("dateFilter");
+const applyFiltersBtn = document.getElementById("applyFilters");
+const clearFiltersBtn = document.getElementById("clearFilters");
+const refreshBtn = document.getElementById("btn-refresh");
+
+// Pagination variables
+let currentPage = 1;
+const tasksPerPage = 4;
+let totalTasks = 0;
+let allTasks = [];
+
+// Filter variables
+let currentFilters = {
+    category: '',
+    status: '',
+    date: ''
+};
 
 // Helper function for API calls with JWT
 async function apiCall(url, method = "GET", body = null) {
@@ -31,7 +51,10 @@ async function apiCall(url, method = "GET", body = null) {
 
 // ===================== Initial Load =====================
 document.addEventListener('DOMContentLoaded', function() {
-    populateCategories().then(loadTasks);
+    populateCategories().then(() => {
+        loadTasks();
+        setupEventListeners();
+    });
 
     // Hide New-Task button for Admins and Freelancers
     const newTaskButton = document.getElementById("btn-new-task");
@@ -61,25 +84,117 @@ document.addEventListener('DOMContentLoaded', function() {
     initStarRating();
 });
 
-// Initialize star rating functionality
-function initStarRating() {
-    const stars = document.querySelectorAll('.rating-stars i');
-    stars.forEach(star => {
-        star.addEventListener('click', function() {
-            const rating = parseInt(this.getAttribute('data-rating'));
-            document.getElementById('ratingValue').value = rating;
+// Setup event listeners for filters and pagination
+function setupEventListeners() {
+    applyFiltersBtn.addEventListener('click', applyFilters);
+    clearFiltersBtn.addEventListener('click', clearFilters);
+    refreshBtn.addEventListener('click', refreshTasks);
+}
 
-            // Reset all stars
-            stars.forEach(s => s.classList.remove('text-warning'));
+// ===================== Filter Functions =====================
+function applyFilters() {
+    currentFilters = {
+        category: categoryFilter.value,
+        status: statusFilter.value,
+        date: dateFilter.value
+    };
 
-            // Highlight selected and previous stars
-            stars.forEach(s => {
-                if (parseInt(s.getAttribute('data-rating')) <= rating) {
-                    s.classList.add('text-warning');
-                }
-            });
-        });
+    currentPage = 1; // Reset to first page when filters change
+    renderTasksWithPagination();
+}
+
+function clearFilters() {
+    categoryFilter.value = '';
+    statusFilter.value = '';
+    dateFilter.value = '';
+
+    currentFilters = {
+        category: '',
+        status: '',
+        date: ''
+    };
+
+    currentPage = 1;
+    renderTasksWithPagination();
+}
+
+function refreshTasks() {
+    loadTasks();
+}
+
+// Filter tasks based on current filters
+function filterTasks(tasks) {
+    return tasks.filter(task => {
+        // Category filter
+        if (currentFilters.category && task.taskCategoryName !== currentFilters.category) {
+            return false;
+        }
+
+        // Status filter
+        if (currentFilters.status && task.status !== currentFilters.status) {
+            return false;
+        }
+
+        // Date filter
+        if (currentFilters.date) {
+            const days = parseInt(currentFilters.date);
+            const taskDate = new Date(task.createdAt || task.deadline);
+            const filterDate = new Date();
+            filterDate.setDate(filterDate.getDate() - days);
+
+            if (taskDate < filterDate) {
+                return false;
+            }
+        }
+
+        return true;
     });
+}
+
+// ===================== Pagination Functions =====================
+function renderPagination(totalTasks) {
+    const totalPages = Math.ceil(totalTasks / tasksPerPage);
+    paginationContainer.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    // Previous button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a>`;
+    paginationContainer.appendChild(prevLi);
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        const pageLi = document.createElement('li');
+        pageLi.className = `page-item ${currentPage === i ? 'active' : ''}`;
+        pageLi.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+        paginationContainer.appendChild(pageLi);
+    }
+
+    // Next button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">Next</a>`;
+    paginationContainer.appendChild(nextLi);
+
+    // Add event listeners to pagination links
+    paginationContainer.addEventListener('click', function(e) {
+        if (e.target.tagName === 'A') {
+            e.preventDefault();
+            const page = parseInt(e.target.getAttribute('data-page'));
+            if (page && page !== currentPage) {
+                currentPage = page;
+                renderTasksWithPagination();
+            }
+        }
+    });
+}
+
+function getPaginatedTasks(tasks) {
+    const startIndex = (currentPage - 1) * tasksPerPage;
+    const endIndex = startIndex + tasksPerPage;
+    return tasks.slice(startIndex, endIndex);
 }
 
 // ===================== Load Tasks =====================
@@ -93,12 +208,42 @@ async function loadTasks() {
             tasks = await apiCall(TASK_API_BASE);
         }
 
+        allTasks = tasks;
+        totalTasks = tasks.length;
+
+        currentPage = 1; // Reset to first page
+        renderTasksWithPagination();
+
+    } catch (error) {
+        console.error("Error loading tasks:", error.message);
+        alert("Error loading tasks: " + error.message);
+    }
+}
+
+// Render tasks with pagination
+function renderTasksWithPagination() {
+    const filteredTasks = filterTasks(allTasks);
+    const paginatedTasks = getPaginatedTasks(filteredTasks);
+
+    // Update freelancer proposals and reviews for the current page
+    loadTaskDetails(paginatedTasks);
+}
+
+// Load additional details for tasks (proposals, reviews)
+async function loadTaskDetails(tasks) {
+    try {
         let freelancerProposals = [];
+        let freelancerRejectedProposals = [];
         let hasReviewedMap = {};
 
         if (role === "FREELANCER") {
             const userId = Number(localStorage.getItem("userId"));
             freelancerProposals = await apiCall(`${PROPOSAL_API_URL}/freelancer/${userId}`);
+
+            // Filter out rejected proposals
+            freelancerRejectedProposals = freelancerProposals.filter(
+                proposal => proposal.status === "REJECTED"
+            );
         }
 
         // For clients, check which tasks they've already reviewed
@@ -117,16 +262,31 @@ async function loadTasks() {
             }
         }
 
-        renderTasks(tasks, freelancerProposals, hasReviewedMap);
+        renderTasks(tasks, freelancerProposals, freelancerRejectedProposals, hasReviewedMap);
+
+        // Update pagination with filtered count
+        const filteredTasks = filterTasks(allTasks);
+        renderPagination(filteredTasks.length);
+
     } catch (error) {
-        console.error("Error loading tasks:", error.message);
-        alert("Error loading tasks: " + error.message);
+        console.error("Error loading task details:", error.message);
     }
 }
 
 // ===================== Render Tasks =====================
-function renderTasks(tasks, freelancerProposals = [], hasReviewedMap = {}) {
+function renderTasks(tasks, freelancerProposals = [], freelancerRejectedProposals = [], hasReviewedMap = {}) {
     taskCardContainer.innerHTML = "";
+
+    if (tasks.length === 0) {
+        taskCardContainer.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No tasks found</h4>
+                <p class="text-muted">Try adjusting your filters or create a new task.</p>
+            </div>
+        `;
+        return;
+    }
 
     // Create a map of tasks with their accepted proposals
     const taskAssignmentMap = {};
@@ -194,13 +354,18 @@ function renderTasks(tasks, freelancerProposals = [], hasReviewedMap = {}) {
             const currentUserId = Number(localStorage.getItem("userId"));
             const hasProposed = freelancerProposals.some(p => p.taskId === task.id);
 
+            // Check if current user has a rejected proposal for this task
+            const hasRejectedProposal = freelancerRejectedProposals.some(
+                p => p.taskId === task.id
+            );
+
             // Check if current user has an accepted proposal for this task
             const acceptedProposal = taskAssignmentMap[task.id];
             const isAssigned = acceptedProposal && acceptedProposal.freelancerId === currentUserId;
 
-            console.log("Task:", task.id, "Assigned to me:", isAssigned, "Status:", task.status);
-
-            if (hasProposed) {
+            if (hasRejectedProposal) {
+                actionButtons = `<span class="badge bg-danger fs-6 px-3 py-2">Proposal Rejected</span>`;
+            } else if (hasProposed) {
                 if (isAssigned) {
                     actionButtons = `<span class="badge bg-success fs-6 px-3 py-2">Assigned to You</span>`;
                 } else {
@@ -420,6 +585,18 @@ async function populateCategories() {
             });
         }
 
+        // === For Category Filter ===
+        const selectFilter = document.getElementById("categoryFilter");
+        if (selectFilter) {
+            selectFilter.innerHTML = '<option value="">All Categories</option>';
+            categories.forEach(cat => {
+                const option = document.createElement("option");
+                option.value = cat.name;
+                option.textContent = cat.name;
+                selectFilter.appendChild(option);
+            });
+        }
+
     } catch (error) {
         console.error("Error loading categories:", error);
         alert("Error loading categories: " + error.message);
@@ -481,7 +658,7 @@ if (proposalForm) {
 }
 
 // ===================== Open Complete Task Modal =====================
-function openCompleteTaskModal(taskId) {
+window.openCompleteTaskModal = function(taskId) {
     document.getElementById("completeTaskId").value = taskId;
     const modal = new bootstrap.Modal(document.getElementById("completeTaskModal"));
     modal.show();
@@ -610,4 +787,25 @@ async function submitReview() {
         console.error("Error submitting review:", error.message);
         alert("Failed to submit review: " + error.message);
     }
+}
+
+// Initialize star rating functionality
+function initStarRating() {
+    const stars = document.querySelectorAll('.rating-stars i');
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.getAttribute('data-rating'));
+            document.getElementById('ratingValue').value = rating;
+
+            // Reset all stars
+            stars.forEach(s => s.classList.remove('text-warning'));
+
+            // Highlight selected and previous stars
+            stars.forEach(s => {
+                if (parseInt(s.getAttribute('data-rating')) <= rating) {
+                    s.classList.add('text-warning');
+                }
+            });
+        });
+    });
 }

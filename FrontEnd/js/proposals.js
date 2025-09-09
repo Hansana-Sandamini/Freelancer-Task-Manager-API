@@ -7,10 +7,24 @@ let currentUser = {
 };
 
 let proposals = [];
+let filteredProposals = [];
+
+// Pagination variables
+let currentPage = 1;
+const proposalsPerPage = 4;
+
+// Filter variables
+let currentFilters = {
+    status: '',
+    minBid: '',
+    maxBid: '',
+    search: ''
+};
 
 // ===================== Initial Load =====================
 document.addEventListener("DOMContentLoaded", () => {
     loadProposals();
+    setupFilterEventListeners();
 
     // Attach event listeners for proposal form submission and action buttons
     const proposalForm = document.getElementById("proposalForm");
@@ -30,7 +44,176 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Load proposals based on user role
+// Setup filter event listeners
+function setupFilterEventListeners() {
+    const applyFiltersBtn = document.getElementById("applyFilters");
+    const clearFiltersBtn = document.getElementById("clearFilters");
+    const searchInput = document.getElementById("searchFilter");
+
+    if (applyFiltersBtn) applyFiltersBtn.addEventListener("click", applyFilters);
+    if (clearFiltersBtn) clearFiltersBtn.addEventListener("click", clearFilters);
+    if (searchInput) searchInput.addEventListener("input", handleSearch);
+}
+
+// ===================== Filter Functions =====================
+function applyFilters() {
+    const statusFilter = document.getElementById("statusFilter");
+    const minBidFilter = document.getElementById("minBidFilter");
+    const maxBidFilter = document.getElementById("maxBidFilter");
+
+    currentFilters = {
+        status: statusFilter?.value || '',
+        minBid: minBidFilter?.value || '',
+        maxBid: maxBidFilter?.value || '',
+        search: currentFilters.search // Keep existing search
+    };
+
+    currentPage = 1; // Reset to first page when filters change
+    filterProposals();
+}
+
+function clearFilters() {
+    const statusFilter = document.getElementById("statusFilter");
+    const minBidFilter = document.getElementById("minBidFilter");
+    const maxBidFilter = document.getElementById("maxBidFilter");
+    const searchFilter = document.getElementById("searchFilter");
+
+    if (statusFilter) statusFilter.value = '';
+    if (minBidFilter) minBidFilter.value = '';
+    if (maxBidFilter) maxBidFilter.value = '';
+    if (searchFilter) searchFilter.value = '';
+
+    currentFilters = {
+        status: '',
+        minBid: '',
+        maxBid: '',
+        search: ''
+    };
+
+    currentPage = 1;
+    filterProposals();
+}
+
+function handleSearch(e) {
+    currentFilters.search = e.target.value.toLowerCase();
+    currentPage = 1;
+    filterProposals();
+}
+
+function filterProposals() {
+    filteredProposals = proposals.filter(proposal => {
+        // Status filter
+        if (currentFilters.status && proposal.status !== currentFilters.status) {
+            return false;
+        }
+
+        // Min bid filter
+        if (currentFilters.minBid && proposal.bidAmount < parseFloat(currentFilters.minBid)) {
+            return false;
+        }
+
+        // Max bid filter
+        if (currentFilters.maxBid && proposal.bidAmount > parseFloat(currentFilters.maxBid)) {
+            return false;
+        }
+
+        // Search filter (search in task title, freelancer name, and cover letter)
+        if (currentFilters.search) {
+            const searchTerm = currentFilters.search;
+            const searchableText = [
+                proposal.taskTitle || '',
+                proposal.freelancerName || '',
+                proposal.coverLetter || ''
+            ].join(' ').toLowerCase();
+
+            if (!searchableText.includes(searchTerm)) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    renderProposalsWithPagination();
+}
+
+// ===================== Pagination Functions =====================
+function renderPagination(totalProposals) {
+    const totalPages = Math.ceil(totalProposals / proposalsPerPage);
+    const paginationContainer = document.getElementById("pagination");
+
+    if (!paginationContainer) return;
+
+    paginationContainer.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    // Previous button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a>`;
+    paginationContainer.appendChild(prevLi);
+
+    // Page numbers
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const pageLi = document.createElement('li');
+        pageLi.className = `page-item ${currentPage === i ? 'active' : ''}`;
+        pageLi.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+        paginationContainer.appendChild(pageLi);
+    }
+
+    // Next button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">Next</a>`;
+    paginationContainer.appendChild(nextLi);
+
+    // Add event listeners to pagination links
+    paginationContainer.addEventListener('click', function(e) {
+        if (e.target.tagName === 'A') {
+            e.preventDefault();
+            const page = parseInt(e.target.getAttribute('data-page'));
+            if (page && page !== currentPage) {
+                currentPage = page;
+                renderProposalsWithPagination();
+                // Scroll to top of proposals section
+                document.getElementById("proposalCardContainer").scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    });
+}
+
+function getPaginatedProposals() {
+    const startIndex = (currentPage - 1) * proposalsPerPage;
+    const endIndex = startIndex + proposalsPerPage;
+    return filteredProposals.slice(startIndex, endIndex);
+}
+
+function renderProposalsWithPagination() {
+    const paginatedProposals = getPaginatedProposals();
+    renderProposals(paginatedProposals);
+    renderPagination(filteredProposals.length);
+    updateResultsCount();
+}
+
+function updateResultsCount() {
+    const resultsCount = document.getElementById("resultsCount");
+    if (resultsCount) {
+        const startIndex = (currentPage - 1) * proposalsPerPage + 1;
+        const endIndex = Math.min(currentPage * proposalsPerPage, filteredProposals.length);
+        resultsCount.textContent = `Showing ${startIndex}-${endIndex} of ${filteredProposals.length} proposals`;
+    }
+}
+
+// ===================== Load Proposals =====================
 async function loadProposals() {
     try {
         let url = PROPOSAL_BASE_URL;
@@ -49,7 +232,9 @@ async function loadProposals() {
         const result = await response.json();
         if (result.code === 200) {
             proposals = result.data || [];
-            renderProposals();
+            filteredProposals = [...proposals];
+            currentPage = 1;
+            renderProposalsWithPagination();
         } else {
             alert("Failed to load proposals: " + result.message);
         }
@@ -60,13 +245,24 @@ async function loadProposals() {
 }
 
 // ===================== Render Proposals =====================
-function renderProposals() {
+function renderProposals(proposalsToRender = []) {
     const cardContainer = document.getElementById("proposalCardContainer");
     if (!cardContainer) return;
 
     cardContainer.innerHTML = "";
 
-    proposals.forEach(proposal => {
+    if (proposalsToRender.length === 0) {
+        cardContainer.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No proposals found</h4>
+                <p class="text-muted">${filteredProposals.length === 0 ? 'No proposals available.' : 'Try adjusting your filters.'}</p>
+            </div>
+        `;
+        return;
+    }
+
+    proposalsToRender.forEach(proposal => {
         const card = document.createElement("div");
         card.className = "col";
 
@@ -86,7 +282,6 @@ function renderProposals() {
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">${proposal.taskTitle || "Unknown Task"}</h5>
-<!--                    <h6 class="card-subtitle mb-2 text-muted">ID: ${proposal.id}</h6>-->
                     <p class="card-text"><strong>Freelancer:</strong> ${proposal.freelancerName || "Unknown Freelancer"}</p>
                     <p class="card-text"><strong>Cover Letter:</strong> ${coverLetter}</p>
                     <p class="card-text"><strong>Bid Amount:</strong> Rs ${proposal.bidAmount.toFixed(2)}</p>
@@ -282,17 +477,7 @@ async function acceptProposal(proposalId) {
         const result = await response.json();
         if (result.code === 200) {
             alert("Proposal accepted successfully! The task is now in progress.");
-
-            // Update the task status to IN_PROGRESS
-            const proposal = proposals.find(p => p.id === proposalId);
-            if (proposal) {
-                await updateTaskStatus(proposal.taskId, "IN_PROGRESS");
-            }
-
-            const modalEl = document.getElementById("proposalDetailsModal");
-            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) modalInstance.hide();
-
+            bootstrap.Modal.getInstance(document.getElementById("proposalDetailsModal")).hide();
             loadProposals();
         } else {
             alert("Failed to accept proposal: " + result.message);
@@ -300,43 +485,6 @@ async function acceptProposal(proposalId) {
     } catch (error) {
         console.error("Error accepting proposal:", error);
         alert("Error accepting proposal. Please try again.");
-    }
-}
-
-// Helper function to update task status
-async function updateTaskStatus(taskId, status) {
-    try {
-        // First get the current task
-        const taskResponse = await fetch(`${TASK_URL_BASE}/${taskId}`, {
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            }
-        });
-
-        const taskResult = await taskResponse.json();
-        if (taskResult.code === 200) {
-            const task = taskResult.data;
-
-            // Update the task status
-            const updateResponse = await fetch(`${TASK_API_BASE}/${taskId}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + localStorage.getItem("token")
-                },
-                body: JSON.stringify({
-                    ...task,
-                    status: status
-                })
-            });
-
-            const updateResult = await updateResponse.json();
-            if (updateResult.code !== 200) {
-                console.error("Failed to update task status:", updateResult.message);
-            }
-        }
-    } catch (error) {
-        console.error("Error updating task status:", error);
     }
 }
 
@@ -379,7 +527,7 @@ async function submitProposal(e) {
     };
 
     try {
-        const response = await fetch(PROPOSAL_BASE_URL, {
+        const response = await fetch(PROPAL_BASE_URL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

@@ -216,10 +216,54 @@
                 <h1 class="h2">Proposals Management</h1>
             </div>
 
+            <!-- Filters Section -->
+            <div class="row mb-4 filter-section" id="filterSection">
+                <div class="col-md-12">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Filter Proposals</h5>
+                        <span id="resultsCount" class="text-muted">Loading proposals...</span>
+                    </div>
+                    <form id="filterForm" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="statusFilter" class="form-label">Status</label>
+                            <select class="form-select" id="statusFilter">
+                                <option value="">All Statuses</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="ACCEPTED">Accepted</option>
+                                <option value="REJECTED">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="minBidFilter" class="form-label">Min Bid (Rs)</label>
+                            <input type="number" class="form-control" id="minBidFilter" placeholder="Min" min="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="maxBidFilter" class="form-label">Max Bid (Rs)</label>
+                            <input type="number" class="form-control" id="maxBidFilter" placeholder="Max" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="searchFilter" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="searchFilter" placeholder="Search proposals...">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary me-2" id="applyFilters">Apply</button>
+                            <button type="button" class="btn btn-outline-secondary" id="clearFilters">Clear</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <!-- Proposals Card Container -->
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-2 g-4 mt-4" id="proposalCardContainer">
                 <!-- Proposal cards will be populated dynamically -->
-            </div>
+            </div></br>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center" id="pagination">
+                    <!-- Pagination links will be populated dynamically -->
+                </ul>
+            </nav>
         </main>
     </div>
 </div>
