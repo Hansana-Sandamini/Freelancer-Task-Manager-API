@@ -137,6 +137,37 @@
                 </div>
             </div>
 
+            <!-- Search and Filter Section -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search users..." aria-label="Search users">
+                        <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearchButton">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="roleFilter">
+                        <option value="">All Roles</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="CLIENT">Client</option>
+                        <option value="FREELANCER">Freelancer</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="itemsPerPageSelect">
+                        <option value="5">5 per page</option>
+                        <option value="10" selected>10 per page</option>
+                        <option value="20">20 per page</option>
+                        <option value="50">50 per page</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- User Table -->
             <div class="table-responsive mt-4">
                 <table class="table table-hover align-middle">
@@ -154,6 +185,18 @@
                     <!-- User rows will be populated dynamically -->
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center" id="pagination">
+                    <!-- Pagination links will be populated dynamically -->
+                </ul>
+            </nav>
+
+            <!-- Results Count -->
+            <div class="text-center text-muted mt-3" id="resultsCount">
+                Showing 0 of 0 users
             </div>
         </main>
     </div>
