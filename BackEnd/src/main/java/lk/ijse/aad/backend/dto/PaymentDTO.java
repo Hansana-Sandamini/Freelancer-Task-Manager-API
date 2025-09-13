@@ -14,6 +14,8 @@ public class PaymentDTO {
     private double amount;
     private LocalDate paymentDate;
     private String paymentStatus;
+    private String stripeSessionId;
+    private String currency;
     private Long taskId;
     private String taskTitle;
     private Long clientId;

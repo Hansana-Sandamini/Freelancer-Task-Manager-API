@@ -26,6 +26,11 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;  // PENDING, COMPLETED, FAILED
 
+    @Column(unique = true)
+    private String stripeSessionId;  // Store Stripe checkout session ID
+
+    private String currency;
+
     @OneToOne
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
@@ -37,4 +42,5 @@ public class Payment {
     @ManyToOne
     @JoinColumn(name = "freelancer_id", nullable = false)
     private User freelancer;
+
 }
