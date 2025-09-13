@@ -1,5 +1,6 @@
 package lk.ijse.aad.backend.service.impl;
 
+import com.stripe.model.checkout.Session;
 import lk.ijse.aad.backend.dto.PaymentDTO;
 import lk.ijse.aad.backend.entity.Payment;
 import lk.ijse.aad.backend.entity.PaymentStatus;
@@ -27,6 +28,40 @@ public class PaymentServiceImpl implements PaymentService {
     private final TaskRepository taskRepository;
     private final AuthRepository authRepository;
     private final ModelMapper modelMapper;
+
+    @Override
+    public void handleSuccessfulPayment(Session session) {
+        try {
+            Long taskId = Long.valueOf(session.getMetadata().get("taskId"));
+            Long clientId = Long.valueOf(session.getMetadata().get("clientId"));
+            Long freelancerId = Long.valueOf(session.getMetadata().get("freelancerId"));
+
+            Task task = taskRepository.findById(taskId)
+                    .orElseThrow(() -> new RuntimeException("Task not found with ID: " + taskId));
+            User client = authRepository.findById(clientId)
+                    .orElseThrow(() -> new RuntimeException("Client not found with ID: " + clientId));
+            User freelancer = authRepository.findById(freelancerId)
+                    .orElseThrow(() -> new RuntimeException("Freelancer not found with ID: " + freelancerId));
+
+            Payment payment = Payment.builder()
+                    .stripeSessionId(session.getId())
+                    .amount(session.getAmountTotal() / 100.0) // paise → rupees
+                    .currency(session.getCurrency())
+                    .paymentDate(LocalDate.now())
+                    .status(PaymentStatus.COMPLETED)
+                    .task(task)
+                    .client(client)
+                    .freelancer(freelancer)
+                    .build();
+
+            paymentRepository.save(payment);
+            log.info("Payment saved successfully for task: {}", task.getTitle());
+
+        } catch (Exception e) {
+            log.error("Error while saving Stripe payment", e);
+            throw new RuntimeException("Failed to save Stripe payment: " + e.getMessage(), e);
+        }
+    }
 
     @Override
     public void savePayment(PaymentDTO paymentDTO) {
@@ -115,6 +150,8 @@ public class PaymentServiceImpl implements PaymentService {
         dto.setTaskId(payment.getTask().getId());
         dto.setTaskTitle(payment.getTask().getTitle());
         dto.setPaymentStatus(payment.getStatus().name());
+        dto.setStripeSessionId(payment.getStripeSessionId());
+        dto.setCurrency(payment.getCurrency());
         return dto;
     }
 
