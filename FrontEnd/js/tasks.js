@@ -341,6 +341,9 @@ function renderTasks(tasks, freelancerProposals = [], freelancerRejectedProposal
                             title="Chat with Freelancer">
                         <i class="fas fa-comments"></i>
                     </button>
+                    <button class="btn btn-primary pay-button" data-task-id="${task.id}">
+                        <i class="fas fa-credit-card"></i> Pay Now
+                    </button>
                 `;
             }
 
