@@ -2,12 +2,15 @@ package lk.ijse.aad.backend.controller;
 
 import lk.ijse.aad.backend.dto.ApiResponse;
 import lk.ijse.aad.backend.dto.PaymentDTO;
+import lk.ijse.aad.backend.entity.Task;
+import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.service.PaymentService;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,50 +22,86 @@ import java.util.List;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final TaskRepository taskRepository;
 
-    @PostMapping("/create-checkout-session")
+    @PostMapping("/create-checkout-session/{taskId}")
     @PreAuthorize("hasRole('CLIENT')")
-    public ResponseEntity<ApiResponse> createCheckoutSession(@RequestBody PaymentDTO paymentDTO) {
+    public ResponseEntity<ApiResponse> createCheckoutSession(
+            @PathVariable Long taskId,
+            Authentication authentication) {
+
         try {
+            // 1. Fetch the task
+            Task task = taskRepository.findById(taskId)
+                    .orElseThrow(() -> new RuntimeException("Task not found with ID: " + taskId));
+
+            // 2. Verify the authenticated user owns this task
+            String currentUsername = authentication.getName();
+            Long currentUserId = Long.valueOf(currentUsername);
+
+            if (!task.getClient().getId().equals(currentUserId)) {
+                return ResponseEntity.status(403).body(new ApiResponse(
+                        403,
+                        "You can only create payments for your own tasks",
+                        null
+                ));
+            }
+
+            // 3. Verify the task has a freelancer assigned
+            if (task.getFreelancer() == null) {
+                return ResponseEntity.badRequest().body(new ApiResponse(
+                        400,
+                        "No freelancer is assigned to this task",
+                        null
+                ));
+            }
+
+            // 4. Get the amount from the task (assuming task has a budget field)
+            // If your task doesn't have a budget, you'll need to add it
+            double amount = task.getPayment().getAmount(); // Or use a fixed amount if needed
+
+            // 5. Create the checkout session
             SessionCreateParams params = SessionCreateParams.builder()
                     .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                     .setMode(SessionCreateParams.Mode.PAYMENT)
-                    .setSuccessUrl("http://localhost:8085/payment-success?session_id={CHECKOUT_SESSION_ID}")
-                    .setCancelUrl("http://localhost:8085/payment-cancel")
+                    .setSuccessUrl("http://localhost:3000/payment-success?session_id={CHECKOUT_SESSION_ID}")
+                    .setCancelUrl("http://localhost:3000/payment-cancel")
                     .addLineItem(
                             SessionCreateParams.LineItem.builder()
                                     .setQuantity(1L)
                                     .setPriceData(
                                             SessionCreateParams.LineItem.PriceData.builder()
-                                                    .setCurrency("inr")
-                                                    .setUnitAmount((long) (paymentDTO.getAmount() * 100)) // rupees → paise
+                                                    .setCurrency("usd") // Changed from "inr" to "usd"
+                                                    .setUnitAmount((long) (amount * 100)) // dollars → cents
                                                     .setProductData(
                                                             SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                                                                    .setName(paymentDTO.getTaskTitle())
+                                                                    .setName(task.getTitle())
+                                                                    .setDescription(task.getDescription())
                                                                     .build()
                                                     )
                                                     .build()
                                     )
                                     .build()
                     )
-                    .putMetadata("taskId", paymentDTO.getTaskId().toString())
-                    .putMetadata("clientId", paymentDTO.getClientId().toString())
-                    .putMetadata("freelancerId", paymentDTO.getFreelancerId().toString())
+                    .putMetadata("taskId", task.getId().toString())
+                    .putMetadata("clientId", task.getClient().getId().toString())
+                    .putMetadata("freelancerId", task.getFreelancer().getId().toString())
                     .build();
 
             Session session = Session.create(params);
 
-            // return sessionId to frontend
             return ResponseEntity.ok(new ApiResponse(
                     200,
                     "Checkout Session Created",
                     session.getId()
             ));
+
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(new ApiResponse(
                     500,
-                    "Failed to create checkout session",
-                    e.getMessage()
+                    "Failed to create checkout session: " + e.getMessage(),
+                    null
             ));
         }
     }
