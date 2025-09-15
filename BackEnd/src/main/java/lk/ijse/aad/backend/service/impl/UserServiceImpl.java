@@ -132,6 +132,31 @@ public class UserServiceImpl implements UserService {
         return convertToDTO(user);
     }
 
+    @Override
+    public User findByEmailAndVerificationCode(String email, String code) {
+        return userRepository.findByEmailAndVerificationCode(email, code)
+                .orElseThrow(() -> new RuntimeException("Invalid verification code"));
+    }
+
+    @Override
+    public void updatePassword(User user, String newPassword) {
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setVerificationCode(null);
+        user.setCodeExpiresAt(null);
+        userRepository.save(user);
+    }
+
+    @Override
+    public User findByEmail(String email) {
+        return (User) userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
     private UserDTO convertToDTO(User user) {
         try {
             UserDTO userDTO = modelMapper.map(user, UserDTO.class);
