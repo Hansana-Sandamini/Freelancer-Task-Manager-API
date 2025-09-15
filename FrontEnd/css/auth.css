@@ -199,6 +199,43 @@ body {
     color: white;
 }
 
+/* Forgot password */
+.back-to-login {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.back-to-login > a {
+    color: #4cc9f0;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.step {
+    display: none;
+}
+
+.step.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+.countdown {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.resend-link {
+    cursor: pointer;
+    color: #667eea;
+    text-decoration: none;
+}
+
+.resend-link.disabled {
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
 /* Responsive adjustments */
 @media (max-width: 576px) {
     .login-container {

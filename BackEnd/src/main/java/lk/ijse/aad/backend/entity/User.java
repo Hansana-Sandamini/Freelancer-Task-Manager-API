@@ -3,6 +3,7 @@ package lk.ijse.aad.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -28,6 +29,12 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;  // ADMIN, FREELANCER, CLIENT
+
+    @Column(name = "verification_code")
+    private String verificationCode;
+
+    @Column(name = "code_expires_at")
+    private LocalDateTime codeExpiresAt;
 
     @Column(columnDefinition = "TEXT")
     private String bio;
