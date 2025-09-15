@@ -50,7 +50,7 @@
                         <div class="d-flex align-items-center">
                             <img src="https://ui-avatars.com/api/?name=Hansana+Sandamini&background=4e73df&color=fff&bold=true" alt="User" width="40" height="40" class="rounded-circle me-2">
                             <div>
-                                <p class="mb-0 fw-bold">Hansana Sandamini</p>
+                                <p class="mb-0 fw-bold" style="color: white">Hansana Sandamini</p>
                             </div>
                         </div>
                     </li>
@@ -68,6 +68,15 @@
 
 <!-- Main Content -->
 <div class="container-fluid">
+    <!-- Animation container -->
+    <div class="animation-container">
+        <div class="animated-circle circle-1"></div>
+        <div class="animated-circle circle-2"></div>
+        <div class="animated-circle circle-3"></div>
+        <div class="animated-square square-1"></div>
+        <div class="animated-square square-2"></div>
+    </div>
+
     <div class="row">
         <!-- Sidebar -->
         <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar">
@@ -216,7 +225,7 @@
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Review Management</h1>
                 <div class="btn-toolbar mb-2 mb-md-0">
-                    <button id="btn-refresh" type="button" class="btn btn-sm btn-outline-secondary">
+                    <button id="btn-refresh" type="button" class="btn btn-sm btn-outline-secondary text-white">
                         <i class="fas fa-sync-alt me-1"></i> Refresh
                     </button>
                 </div>
@@ -311,19 +320,19 @@
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="button" class="btn btn-primary me-2" id="applyFilters">Apply Filters</button>
-                            <button type="button" class="btn btn-outline-secondary" id="clearFilters">Clear</button>
+                            <button type="button" class="btn btn-outline-secondary text-white" id="clearFilters">Clear</button>
                         </div>
                     </form>
                 </div>
             </div>
 
             <!-- Reviews List -->
-            <div class="card shadow mb-4">
+            <div class="card shadow mb-4" style="background: rgba(255, 255, 255, 0.1);">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Reviews</h6>
+                    <h5 class="m-0 font-weight-bold text-white">Reviews</h5>
                     <div id="reviewActions"></div>
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="background-color: #2d3748 !important;">
                     <div class="table-responsive" id="reviewsTableContainer">
                         <div id="noReviewsMessage" class="alert alert-info d-none">
                             No reviews found.
@@ -390,7 +399,7 @@
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <strong>Comment:</strong>
-                        <p id="detailComment" class="p-3 bg-light rounded"></p>
+                        <p id="detailComment" class="p-3 bg-light rounded" style="color: black"></p>
                     </div>
                 </div>
             </div>

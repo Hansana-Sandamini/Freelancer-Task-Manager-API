@@ -8,13 +8,25 @@
           rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
           crossorigin="anonymous"
-          type="text/css"
     />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="/Freelancer-Task-Manager-API/FrontEnd/css/home.css">
-    <link rel="stylesheet" type="text/css" href="/Freelancer-Task-Manager-API/FrontEnd/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/Freelancer-Task-Manager-API/FrontEnd/css/styles.css">
+    <link rel="stylesheet" href="/Freelancer-Task-Manager-API/FrontEnd/css/home.css">
+    <style>
+
+    </style>
 </head>
 <body>
+<!-- Animation container -->
+<div class="animation-container">
+    <div class="animated-circle circle-1"></div>
+    <div class="animated-circle circle-2"></div>
+    <div class="animated-circle circle-3"></div>
+    <div class="animated-square square-1"></div>
+    <div class="animated-square square-2"></div>
+</div>
+
 <!-- Top Bar -->
 <nav id="topbar" class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
@@ -24,7 +36,7 @@
         </div>
 
         <div class="d-flex">
-            <a href="/Freelancer-Task-Manager-API/FrontEnd/pages/signin.html" class="btn btn-custom text-white" style="margin-right: 10px;">Sign In</a>
+            <a href="/Freelancer-Task-Manager-API/FrontEnd/pages/signin.html" class="btn btn-custom text-white me-2">Sign In</a>
             <a href="/Freelancer-Task-Manager-API/FrontEnd/pages/signup.html" class="btn btn-custom text-white">Sign Up</a>
         </div>
     </div>
@@ -34,23 +46,231 @@
 <main class="main-content">
     <!-- Hero Section -->
     <div class="container">
-        <div class="hero-section p-5 text-center">
+        <div class="hero-section p-5 text-center fade-in">
             <h1 class="display-4 fw-bold mb-4">Where Freelancers & Clients Thrive</h1>
             <p class="lead mb-4">
                 Connect, collaborate, and create with seamless project management from our powerful platform
             </p>
             <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-                <a href="/Freelancer-Task-Manager-API/FrontEnd/pages/signup.html" class="btn btn-light btn-lg px-4">Get Started</a>
+                <a href="/Freelancer-Task-Manager-API/FrontEnd/pages/signup.html" class="btn btn-light btn-lg px-4 me-sm-3">Get Started</a>
                 <a href="/Freelancer-Task-Manager-API/FrontEnd/pages/signin.html" class="btn btn-outline-light btn-lg px-4">Sign In</a>
             </div>
         </div>
     </div>
+
+    <!-- Features Section -->
+    <section class="content-section">
+        <div class="container">
+            <h2 class="section-title">Why Choose TaskFlow?</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <h3 class="text-white">Task Management</h3>
+                        <p class="text-light">Easily create, assign, and track tasks with our intuitive interface. Stay on top of deadlines and priorities.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h3 class="text-white">Seamless Communication</h3>
+                        <p class="text-light">Chat in real-time with your team members and clients. Share files and get feedback instantly.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="text-white">Progress Tracking</h3>
+                        <p class="text-light">Monitor project progress with visual dashboards and detailed reports. Identify bottlenecks early.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="content-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <div class="stat-number" id="userCount">10,000+</div>
+                        <p class="text-light">Active Users</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <div class="stat-number" id="projectCount">25,000+</div>
+                        <p class="text-light">Projects Completed</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <div class="stat-number" id="taskCount">150,000+</div>
+                        <p class="text-light">Tasks Managed</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <div class="stat-number">99%</div>
+                        <p class="text-light">Satisfaction Rate</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="content-section">
+        <div class="container">
+            <h2 class="section-title">What Our Users Say</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="testimonial-card fade-in">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="User" class="testimonial-avatar me-3">
+                            <div>
+                                <h5 class="text-white mb-0">Sarah Johnson</h5>
+                                <p class="text-light mb-0">Freelance Designer</p>
+                            </div>
+                        </div>
+                        <p class="text-light">"TaskFlow has transformed how I manage my projects. The intuitive interface makes it easy to keep track of deadlines and communicate with clients."</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-card fade-in">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://randomuser.me/api/portraits/men/44.jpg" alt="User" class="testimonial-avatar me-3">
+                            <div>
+                                <h5 class="text-white mb-0">Michael Chen</h5>
+                                <p class="text-light mb-0">Project Manager</p>
+                            </div>
+                        </div>
+                        <p class="text-light">"As someone who works with multiple freelancers, TaskFlow keeps everyone on the same page. The progress tracking features have saved me countless hours."</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-card fade-in">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="User" class="testimonial-avatar me-3">
+                            <div>
+                                <h5 class="text-white mb-0">Emma Rodriguez</h5>
+                                <p class="text-light mb-0">Content Creator</p>
+                            </div>
+                        </div>
+                        <p class="text-light">"I've tried many task managers, but TaskFlow stands out with its beautiful design and powerful features. It's exactly what freelancers need to stay organized."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="content-section contact-section" id="contact">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            <div class="row">
+                <div class="col-lg-8">
+                    <form class="contact-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <input type="text" class="form-control" placeholder="Your Name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <input type="email" class="form-control" placeholder="Your Email" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Subject">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="5" placeholder="Your Message" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-light btn-lg">Send Message</button>
+                    </form>
+                </div>
+                <div class="col-lg-4 mt-4 mt-lg-0">
+                    <div class="contact-info">
+                        <div class="contact-info-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-white">Location</h5>
+                                <p class="text-light">123 Business Ave, Suite 100<br>San Francisco, CA 94107</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-white">Email</h5>
+                                <p class="text-light">info@taskflow.com<br>support@taskflow.com</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-white">Phone</h5>
+                                <p class="text-light">+1 (555) 123-4567<br>+1 (555) 987-6543</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="content-section">
+        <div class="container">
+            <div class="cta-content fade-in text-center">
+                <h2 class="mb-4">Ready to Boost Your Productivity?</h2>
+                <p class="lead mb-4">Join thousands of freelancers and clients who are already managing their projects efficiently with TaskFlow.</p>
+                <a href="/Freelancer-Task-Manager-API/FrontEnd/pages/signup.html" class="btn btn-light btn-lg px-5">Get Started For Free</a>
+            </div>
+        </div>
+    </section>
 </main>
 
 <!-- Footer -->
 <footer class="text-white text-center">
     <div class="container">
-        <p class="mb-0">&copy; 2025&nbsp; TaskFlow &nbsp;|&nbsp; Freelance Task Manager API.&nbsp; All rights reserved.</p>
+        <div class="row">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <h5>TaskFlow</h5>
+                <p>The ultimate platform for freelancers and clients to collaborate efficiently.</p>
+            </div>
+            <div class="col-md-4 mb-3 mb-md-0">
+                <h5>Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-white text-decoration-none">Home</a></li>
+                    <li><a href="#contact" class="text-white text-decoration-none">Contact</a></li>
+                    <li><a href="#" class="text-white text-decoration-none">Features</a></li>
+                    <li><a href="#" class="text-white text-decoration-none">Pricing</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h5>Connect With Us</h5>
+                <div class="d-flex justify-content-center">
+                    <a href="#" class="text-white me-3"><i class="fab fa-facebook-f fa-lg"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-instagram fa-lg"></i></a>
+                    <a href="#" class="text-white"><i class="fab fa-linkedin-in fa-lg"></i></a>
+                </div>
+            </div>
+        </div>
+        <hr class="my-4">
+        <p class="mb-0">&copy; 2025 TaskFlow | Freelance Task Manager API. All rights reserved.</p>
     </div>
 </footer>
 
@@ -59,6 +279,30 @@
         crossorigin="anonymous">
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Simple animation for elements as they enter viewport
+    document.addEventListener('DOMContentLoaded', function() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.feature-card, .testimonial-card, .cta-content').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Simple form submission handling
+        document.querySelector('.contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Thank you for your message! We will get back to you soon.');
+            this.reset();
+        });
+    });
+</script>
 
 </body>
 </html>

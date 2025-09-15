@@ -50,7 +50,7 @@
                         <div class="d-flex align-items-center">
                             <img src="https://ui-avatars.com/api/?name=Hansana+Sandamini&background=4e73df&color=fff&bold=true" alt="User" width="40" height="40" class="rounded-circle me-2">
                             <div>
-                                <p class="mb-0 fw-bold">Hansana Sandamini</p>
+                                <p class="mb-0 fw-bold" style="color: white">Hansana Sandamini</p>
                             </div>
                         </div>
                     </li>
@@ -70,6 +70,15 @@
 
 <!-- Main Content -->
 <div class="container-fluid">
+    <!-- Animation container -->
+    <div class="animation-container">
+        <div class="animated-circle circle-1"></div>
+        <div class="animated-circle circle-2"></div>
+        <div class="animated-circle circle-3"></div>
+        <div class="animated-square square-1"></div>
+        <div class="animated-square square-2"></div>
+    </div>
+
     <div class="row">
         <!-- Sidebar -->
         <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar">
@@ -221,7 +230,7 @@
                 <div class="col-md-12">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0">Filter Proposals</h5>
-                        <span id="resultsCount" class="text-muted">Loading proposals...</span>
+                        <span id="resultsCount" class="text-muted" style="color: white !important;">Loading proposals...</span>
                     </div>
                     <form id="filterForm" class="row g-3">
                         <div class="col-md-3">
@@ -247,7 +256,7 @@
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button type="button" class="btn btn-primary me-2" id="applyFilters">Apply</button>
-                            <button type="button" class="btn btn-outline-secondary" id="clearFilters">Clear</button>
+                            <button type="button" class="btn btn-outline-secondary text-white" id="clearFilters">Clear</button>
                         </div>
                     </form>
                 </div>
@@ -280,12 +289,12 @@
                 <form id="proposalEditForm">
                     <input type="hidden" id="modalProposalId">
                     <div class="mb-3">
-                        <h6>Task Title</h6>
-                        <p id="modalTaskTitle" class="text-muted"></p>
+                        <label for="modalTaskTitle" class="form-label">Task Title</label>
+                        <textarea type="text" class="form-control" id="modalTaskTitle" rows="1" readonly></textarea>
                     </div>
                     <div class="mb-3">
-                        <h6>Freelancer</h6>
-                        <p id="modalFreelancer" class="text-muted"></p>
+                        <label for="modalFreelancer" class="form-label">Freelancer</label>
+                        <textarea type="text" class="form-control" id="modalFreelancer" rows="1" readonly></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="modalCoverLetter" class="form-label">Cover Letter</label>
@@ -296,12 +305,12 @@
                         <input type="number" class="form-control" id="modalBidAmount" step="0.01" readonly>
                     </div>
                     <div class="mb-3">
-                        <h6>Submitted At</h6>
-                        <p id="modalSubmittedAt" class="text-muted"></p>
+                        <label for="modalSubmittedAt" class="form-label">Submitted At</label>
+                        <textarea type="text" class="form-control" id="modalSubmittedAt" rows="1" readonly></textarea>
                     </div>
                     <div class="mb-3">
-                        <h6>Status</h6>
-                        <p id="modalStatus" class="text-muted"></p>
+                        <label for="modalStatus" class="form-label">Status</label>
+                        <textarea type="text" class="form-control" id="modalStatus" rows="1" readonly></textarea>
                     </div>
                 </form>
             </div>

@@ -50,7 +50,7 @@
                         <div class="d-flex align-items-center">
                             <img src="https://ui-avatars.com/api/?name=Hansana+Sandamini&background=4e73df&color=fff&bold=true" alt="User" width="40" height="40" class="rounded-circle me-2">
                             <div>
-                                <p class="mb-0 fw-bold">Hansana Sandamini</p>
+                                <p class="mb-0 fw-bold" style="color: white">Hansana Sandamini</p>
                             </div>
                         </div>
                     </li>
@@ -70,6 +70,15 @@
 
 <!-- Main Content -->
 <div class="container-fluid">
+    <!-- Animation container -->
+    <div class="animation-container">
+        <div class="animated-circle circle-1"></div>
+        <div class="animated-circle circle-2"></div>
+        <div class="animated-circle circle-3"></div>
+        <div class="animated-square square-1"></div>
+        <div class="animated-square square-2"></div>
+    </div>
+
     <div class="row">
         <!-- Sidebar -->
         <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar">
@@ -120,6 +129,12 @@
                 <h1 class="h2">Freelancer Dashboard</h1>
             </div>
 
+            <!-- Welcome Message -->
+            <div class="welcome-message fade-in">
+                <h3>Hello, Freelancer User!</h3>
+                <p>Welcome back to your dashboard. Here's an overview of your freelance activities.</p>
+            </div>
+
             <!-- Stats Cards -->
             <div class="row mb-4">
                 <div class="col-md-3">
@@ -131,7 +146,7 @@
                                     <h3 class="mb-0" id="myProposalsCount"></h3>
                                 </div>
                                 <div class="stat-icon bg-primary">
-                                    <i class="fas fa-file-signature"></i>
+                                    <i class="fas fa-file-signature" style="color: white"></i>
                                 </div>
                             </div>
                         </div>
@@ -145,8 +160,8 @@
                                     <h6 class="card-title">Active Tasks</h6>
                                     <h3 class="mb-0" id="activeTasksCount"></h3>
                                 </div>
-                                <div class="stat-icon bg-primary">
-                                    <i class="fas fa-tasks"></i>
+                                <div class="stat-icon bg-info">
+                                    <i class="fas fa-tasks" style="color: white"></i>
                                 </div>
                             </div>
                         </div>
@@ -161,7 +176,7 @@
                                     <h3 class="mb-0" id="acceptedProposalsCount"></h3>
                                 </div>
                                 <div class="stat-icon bg-success">
-                                    <i class="fas fa-file-signature"></i>
+                                    <i class="fas fa-check-circle" style="color: white"></i>
                                 </div>
                             </div>
                         </div>
@@ -176,7 +191,7 @@
                                     <h3 class="mb-0" id="rejectedProposalsCount"></h3>
                                 </div>
                                 <div class="stat-icon bg-danger">
-                                    <i class="fas fa-file-signature"></i>
+                                    <i class="fas fa-times-circle" style="color: white"></i>
                                 </div>
                             </div>
                         </div>
@@ -191,7 +206,7 @@
                                     <h3 class="mb-0" id="completedTasksCount"></h3>
                                 </div>
                                 <div class="stat-icon bg-success">
-                                    <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                    <i class="fas fa-check-double" style="color: white"></i>
                                 </div>
                             </div>
                         </div>
@@ -203,10 +218,10 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="card-title">Earnings (Monthly)</h6>
-                                    <h3 class="mb-0" id="earningsCount">Rs.0</h3>
+                                    <h3 class="mb-0" id="earningsCount"></h3>
                                 </div>
-                                <div class="stat-icon bg-success">
-                                    <i class="fas fa-dollar-sign"></i>
+                                <div class="stat-icon bg-warning">
+                                    <i class="fas fa-dollar-sign" style="color: white"></i>
                                 </div>
                             </div>
                         </div>

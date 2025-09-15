@@ -2,6 +2,7 @@
 .card {
     border-radius: 12px;
     margin-bottom: 2rem;
+    background-color: #2b375d;
 }
 
 .card-body {
@@ -15,11 +16,11 @@
 /* Form Styling */
 #profileForm .form-label {
     font-weight: 600;
-    color: #2d3748;
+    color: white;
 }
 
-#profileForm .form-control[readonly] {
-    background-color: #f8f9fa;
+#profileForm .form-control {
+    background-color: #bdc9dc !important;
 }
 
 #editProfileBtn, #saveProfileBtn, #cancelEditBtn {

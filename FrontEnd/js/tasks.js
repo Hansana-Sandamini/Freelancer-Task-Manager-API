@@ -527,6 +527,7 @@ async function editTask(taskId) {
         alert("Error loading task: " + error.message);
     }
 }
+window.editTask = editTask;
 
 // Handle form submit
 document.getElementById("editTaskForm").addEventListener("submit", async e => {
