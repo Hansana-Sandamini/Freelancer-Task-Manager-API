@@ -50,7 +50,7 @@
                         <div class="d-flex align-items-center">
                             <img src="https://ui-avatars.com/api/?name=Hansana+Sandamini&background=4e73df&color=fff&bold=true" alt="User" width="40" height="40" class="rounded-circle me-2">
                             <div>
-                                <p class="mb-0 fw-bold">Hansana Sandamini</p>
+                                <p class="mb-0 fw-bold" style="color: white">Hansana Sandamini</p>
                             </div>
                         </div>
                     </li>
@@ -68,6 +68,15 @@
 
 <!-- Main Content -->
 <div class="container-fluid">
+    <!-- Animation container -->
+    <div class="animation-container">
+        <div class="animated-circle circle-1"></div>
+        <div class="animated-circle circle-2"></div>
+        <div class="animated-circle circle-3"></div>
+        <div class="animated-square square-1"></div>
+        <div class="animated-square square-2"></div>
+    </div>
+
     <div class="row">
         <!-- Sidebar -->
         <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar">
@@ -215,7 +224,7 @@
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Task Management</h1>
                 <div class="btn-toolbar mb-2 mb-md-0">
-                    <button id="btn-refresh" type="button" class="btn btn-sm btn-outline-secondary me-2">
+                    <button id="btn-refresh" type="button" class="btn btn-sm btn-outline-secondary me-2 text-white">
                         <i class="fas fa-sync-alt me-1"></i> Refresh
                     </button>
                     <button id="btn-new-task" type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
@@ -255,7 +264,7 @@
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="button" class="btn btn-primary me-2" id="applyFilters">Apply Filters</button>
-                            <button type="button" class="btn btn-outline-secondary" id="clearFilters">Clear</button>
+                            <button type="button" class="btn btn-outline-secondary text-white" id="clearFilters">Clear</button>
                         </div>
                     </form>
                 </div>
@@ -470,7 +479,7 @@
                 <h5 class="modal-title" id="chatModalTitle">Chat</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-3" id="chatMessages" style="max-height: 400px; overflow-y: auto; background-color: #e5ddd5;">
+            <div class="modal-body p-3" id="chatMessages" style="max-height: 400px; overflow-y: auto; background-color: #e5ddd5; color: black;">
                 <!-- Messages will load here -->
             </div>
             <div class="modal-footer">

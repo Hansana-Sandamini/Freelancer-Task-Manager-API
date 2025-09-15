@@ -49,7 +49,7 @@
                         <div class="d-flex align-items-center">
                             <img src="https://ui-avatars.com/api/?name=Hansana+Sandamini&background=4e73df&color=fff&bold=true" alt="User" width="40" height="40" class="rounded-circle me-2">
                             <div>
-                                <p class="mb-0 fw-bold">Hansana Sandamini</p>
+                                <p class="mb-0 fw-bold" style="color: white">Hansana Sandamini</p>
                             </div>
                         </div>
                     </li>
@@ -69,6 +69,15 @@
 
 <!-- Main Content -->
 <div class="container-fluid">
+    <!-- Animation container -->
+    <div class="animation-container">
+        <div class="animated-circle circle-1"></div>
+        <div class="animated-circle circle-2"></div>
+        <div class="animated-circle circle-3"></div>
+        <div class="animated-square square-1"></div>
+        <div class="animated-square square-2"></div>
+    </div>
+
     <div class="row">
         <!-- Sidebar -->
         <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar">
@@ -127,6 +136,17 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Admin Dashboard</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button type="button" class="btn btn-sm btn-primary">
+                        <i class="fas fa-download me-1"></i> Generate Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Welcome Message -->
+            <div class="welcome-message fade-in">
+                <h3>Hello, Admin User!</h3>
+                <p>Welcome to the administration dashboard. Manage users, tasks, and system settings from here.</p>
             </div>
 
             <!-- Stats Cards -->
@@ -138,9 +158,10 @@
                                 <div>
                                     <h6 class="card-title">All Users</h6>
                                     <h3 class="mb-0" id="allUsersCount"></h3>
+                                    <small class="text-success"><i class="fas fa-arrow-up"></i> 5.2% from last week</small>
                                 </div>
-                                <div class="stat-icon bg-warning">
-                                    <i class="fas fa-users fa-2x text-gray-300"></i>
+                                <div class="stat-icon bg-primary">
+                                    <i class="fas fa-users" style="color: white"></i>
                                 </div>
                             </div>
                         </div>
@@ -153,9 +174,10 @@
                                 <div>
                                     <h6 class="card-title">All Tasks</h6>
                                     <h3 class="mb-0" id="allTasksCount"></h3>
+                                    <small class="text-success"><i class="fas fa-arrow-up"></i> 3.1% from last week</small>
                                 </div>
-                                <div class="stat-icon bg-primary">
-                                    <i class="fas fa-tasks"></i>
+                                <div class="stat-icon bg-info">
+                                    <i class="fas fa-tasks" style="color: white"></i>
                                 </div>
                             </div>
                         </div>
@@ -168,9 +190,10 @@
                                 <div>
                                     <h6 class="card-title">Completed Tasks</h6>
                                     <h3 class="mb-0" id="completedTasksCount"></h3>
+                                    <small class="text-success"><i class="fas fa-arrow-up"></i> 7.8% from last week</small>
                                 </div>
                                 <div class="stat-icon bg-success">
-                                    <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                    <i class="fas fa-check-double" style="color: white"></i>
                                 </div>
                             </div>
                         </div>
@@ -183,9 +206,10 @@
                                 <div>
                                     <h6 class="card-title">All Proposals</h6>
                                     <h3 class="mb-0" id="allProposalsCount"></h3>
+                                    <small class="text-success"><i class="fas fa-arrow-up"></i> 12.4% from last week</small>
                                 </div>
-                                <div class="stat-icon bg-primary">
-                                    <i class="fas fa-file-signature"></i>
+                                <div class="stat-icon bg-warning">
+                                    <i class="fas fa-file-signature" style="color: white"></i>
                                 </div>
                             </div>
                         </div>
@@ -197,10 +221,11 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="card-title">Accepted Proposals</h6>
-                                    <h3 class="mb-0" id="acceptedProposalsCount"></h3>
+                                    <h3 class="mb-0" id="acceptedProposalsCount">67</h3>
+                                    <small class="text-success"><i class="fas fa-arrow-up"></i> 4.3% from last week</small>
                                 </div>
                                 <div class="stat-icon bg-success">
-                                    <i class="fas fa-file-signature"></i>
+                                    <i class="fas fa-check-circle" style="color: white"></i>
                                 </div>
                             </div>
                         </div>
@@ -213,9 +238,42 @@
                                 <div>
                                     <h6 class="card-title">Rejected Proposals</h6>
                                     <h3 class="mb-0" id="rejectedProposalsCount"></h3>
+                                    <small class="text-danger"><i class="fas fa-arrow-down"></i> 2.1% from last week</small>
                                 </div>
                                 <div class="stat-icon bg-danger">
-                                    <i class="fas fa-file-signature"></i>
+                                    <i class="fas fa-times-circle" style="color: white"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">System Health</h6>
+                                    <h3 class="mb-0">98%</h3>
+                                    <small class="text-success">All systems operational</small>
+                                </div>
+                                <div class="stat-icon bg-info">
+                                    <i class="fas fa-server" style="color: white"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">Revenue</h6>
+                                    <h3 class="mb-0">Rs.12,540</h3>
+                                    <small class="text-success"><i class="fas fa-arrow-up"></i> 8.7% from last month</small>
+                                </div>
+                                <div class="stat-icon bg-success">
+                                    <i class="fas fa-dollar-sign" style="color: white"></i>
                                 </div>
                             </div>
                         </div>

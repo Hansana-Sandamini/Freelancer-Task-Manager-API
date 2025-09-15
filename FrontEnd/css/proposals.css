@@ -16,28 +16,23 @@
 }
 
 /* Modal Styling */
-#proposalDetailsModal .modal-content {
-    border-radius: 12px;
-}
+/*#proposalDetailsModal .modal-content {*/
+/*    border-radius: 12px;*/
+/*}*/
 
-#proposalDetailsModal .modal-header {
-    background: linear-gradient(135deg, #b1bfd5 0%, #00173b 100%);
-    color: white;
-}
+/*#proposalDetailsModal .modal-body h6 {*/
+/*    font-weight: 600;*/
+/*    color: #2d3748;*/
+/*}*/
 
-#proposalDetailsModal .modal-body h6 {
-    font-weight: 600;
-    color: #2d3748;
-}
+/*#proposalDetailsModal .modal-body p {*/
+/*    margin-bottom: 0;*/
+/*    font-size: 1rem;*/
+/*}*/
 
-#proposalDetailsModal .modal-body p {
-    margin-bottom: 0;
-    font-size: 1rem;
-}
-
-#proposalDetailsModal .modal-body .form-control[readonly] {
-    background-color: #f8f9fa;
-}
+/*#proposalDetailsModal .modal-body .form-control[readonly] {*/
+/*    background-color: #f8f9fa;*/
+/*}*/
 
 #acceptProposalBtn, #rejectProposalBtn, #editProposalBtn, #saveProposalBtn, #deleteProposalBtn {
     border-radius: 8px;
