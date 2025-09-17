@@ -141,6 +141,18 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    @Override
+    public PaymentDTO getPaymentByTaskId(Long taskId) {
+        try {
+            Payment payment = paymentRepository.findByTaskId(taskId)
+                    .orElseThrow(() -> new RuntimeException("No payment found for task ID: " + taskId));
+            return convertToDTO(payment);
+        } catch (Exception e) {
+            log.error("Error while retrieving payment for task: {}", taskId, e);
+            throw new RuntimeException("Failed to retrieve payment for task: " + e.getMessage(), e);
+        }
+    }
+
     private PaymentDTO convertToDTO(Payment payment) {
         PaymentDTO dto = modelMapper.map(payment, PaymentDTO.class);
         dto.setClientId(payment.getClient().getId());

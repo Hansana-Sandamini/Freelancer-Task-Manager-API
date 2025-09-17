@@ -62,6 +62,10 @@ main{
     background-color: #f0f8ff !important;
 }
 
+.dropdown-item {
+    border: 0.00001rem solid #6479bd;
+}
+
 .dropdown-item:hover {
     background-color: #e9ecef !important;
 }

@@ -2,6 +2,7 @@ package lk.ijse.aad.backend.service.impl;
 
 import lk.ijse.aad.backend.dto.ProposalDTO;
 import lk.ijse.aad.backend.entity.*;
+import lk.ijse.aad.backend.repository.PaymentRepository;
 import lk.ijse.aad.backend.repository.ProposalRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.repository.AuthRepository;
@@ -13,7 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class ProposalServiceImpl implements ProposalService {
 
     private final ProposalRepository proposalRepository;
@@ -31,6 +35,7 @@ public class ProposalServiceImpl implements ProposalService {
     private final ModelMapper modelMapper;
     private final EmailService emailService;
     private final NotificationService notificationService;
+    private final PaymentRepository paymentRepository;
 
     @Override
     public void saveProposal(ProposalDTO proposalDTO) {
@@ -145,6 +150,7 @@ public class ProposalServiceImpl implements ProposalService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     @Override
     public void acceptProposal(Long proposalId) {
         try {
@@ -202,6 +208,18 @@ public class ProposalServiceImpl implements ProposalService {
                     task.getId(),
                     task.getTitle()
             );
+
+            // Create a payment record with PENDING status
+            Payment payment = Payment.builder()
+                    .amount(proposal.getBidAmount())
+                    .paymentDate(LocalDate.now())
+                    .status(PaymentStatus.PENDING)  // Payment is pending until completed
+                    .task(task)
+                    .client(task.getClient())
+                    .freelancer(proposal.getFreelancer())
+                    .build();
+
+            paymentRepository.save(payment);
 
             log.info("Proposal accepted successfully: {}", proposalId);
 
