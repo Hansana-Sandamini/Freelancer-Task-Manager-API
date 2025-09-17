@@ -3,6 +3,7 @@ package lk.ijse.aad.backend.controller;
 import lk.ijse.aad.backend.dto.ApiResponse;
 import lk.ijse.aad.backend.dto.UserDTO;
 import lk.ijse.aad.backend.repository.UserRepository;
+import lk.ijse.aad.backend.service.FileStorageService;
 import lk.ijse.aad.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserRepository userRepository;
+    private final FileStorageService fileStorageService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -131,6 +133,36 @@ public class UserController {
                 "User count retrieved successfully",
                 count
         ));
+    }
+
+    @DeleteMapping("/profile/image")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse> deleteProfileImage() {
+        try {
+            UserDTO currentUser = userService.getCurrentUserProfile();
+
+            // Check if user has a custom profile image (not a default avatar)
+            if (currentUser.getProfileImage() != null &&
+                    !currentUser.getProfileImage().contains("ui-avatars.com") &&
+                    !currentUser.getProfileImage().isEmpty()) {
+
+                // Delete the image file from storage
+                fileStorageService.deleteProfileImage(currentUser.getProfileImage());
+            }
+
+            // Update user profile with null image in database
+            currentUser.setProfileImage(null);
+            userService.updateUser(currentUser);
+
+            return ResponseEntity.ok(new ApiResponse(
+                    200,
+                    "Profile image deleted successfully",
+                    null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(new ApiResponse(500, "Failed to delete profile image: " + e.getMessage(), null));
+        }
     }
 
 }

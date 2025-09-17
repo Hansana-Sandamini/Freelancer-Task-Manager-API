@@ -30,6 +30,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;  // ADMIN, FREELANCER, CLIENT
 
+    @Column(name = "profile_image")
+    private String profileImage;
+
     @Column(name = "verification_code")
     private String verificationCode;
 
