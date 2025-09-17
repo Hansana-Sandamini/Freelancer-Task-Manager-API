@@ -19,7 +19,7 @@
 }
 
 #chatModal .modal-header {
-    background-color: #075e54;
+    background-color: #122562;
     color: white;
     padding: 12px 15px;
     flex-shrink: 0;
@@ -62,9 +62,10 @@
 }
 
 .message.sent {
-    background-color: #dcf8c6;
+    background-color: #dddee1;
     border-top-right-radius: 0;
     margin-left: auto;
+    border: 1px solid #a7b6e7;
 }
 
 .message.received {

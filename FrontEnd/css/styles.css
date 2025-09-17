@@ -192,3 +192,14 @@ main{
     background-color: #2b375d;
     color: white;
 }
+
+#taskCardContainer,
+#proposalCardContainer {
+    background-color: #172a65;
+}
+
+#taskCardContainer .card-body,
+#proposalCardContainer .card-body,
+.page-link {
+    background-color: #bdc9dc;
+}

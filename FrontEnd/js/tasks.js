@@ -280,9 +280,9 @@ function renderTasks(tasks, freelancerProposals = [], freelancerRejectedProposal
     if (tasks.length === 0) {
         taskCardContainer.innerHTML = `
             <div class="col-12 text-center py-5">
-                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">No tasks found</h4>
-                <p class="text-muted">Try adjusting your filters or create a new task.</p>
+                <i class="fas fa-tasks fa-3x text-white mb-3"></i>
+                <h4 class="text-white">No tasks found</h4>
+                <p class="text-white">Try adjusting your filters or create a new task.</p>
             </div>
         `;
         return;
