@@ -1,4 +1,4 @@
-const PAYMENT_API_BASE = "http://localhost:8085/api/v1/payments";
+const PAYMENT_API_URL = "http://localhost:8085/api/v1/payments";
 
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
@@ -44,11 +44,11 @@ async function loadPayments() {
         let payments = [];
 
         if (role === "CLIENT") {
-            payments = await apiCall(`${PAYMENT_API_BASE}/client/${userId}`);
+            payments = await apiCall(`${PAYMENT_API_URL}/client/${userId}`);
         } else if (role === "FREELANCER") {
-            payments = await apiCall(`${PAYMENT_API_BASE}/freelancer/${userId}`);
+            payments = await apiCall(`${PAYMENT_API_URL}/freelancer/${userId}`);
         } else if (role === "ADMIN") {
-            payments = await apiCall(PAYMENT_API_BASE);
+            payments = await apiCall(PAYMENT_API_URL);
         }
 
         allPayments = payments;
@@ -174,17 +174,17 @@ function renderPayments(payments) {
         const statusBadge = getPaymentStatusBadge(payment.paymentStatus);
 
         row.innerHTML = `
-                <td>${payment.taskTitle}</td>
-                <td>Rs ${payment.amount.toFixed(2)}</td>
-                <td>${new Date(payment.paymentDate).toLocaleDateString()}</td>
-                <td>${statusBadge}</td>
-                <td>${counterparty}</td>
-                <td class="payment-actions">
-                    <button class="btn btn-sm btn-outline-primary view-payment" data-payment-id="${payment.id}">
-                        <i class="fas fa-eye"></i> View
-                    </button>
-                </td>
-            `;
+            <td>${payment.taskTitle}</td>
+            <td>Rs ${payment.amount.toFixed(2)}</td>
+            <td>${new Date(payment.paymentDate).toLocaleDateString()}</td>
+            <td>${statusBadge}</td>
+            <td>${counterparty}</td>
+            <td class="payment-actions">
+                <button class="btn btn-sm btn-outline-primary view-payment" data-payment-id="${payment.id}">
+                    <i class="fas fa-eye"></i> View
+                </button>
+            </td>
+        `;
 
         tbody.appendChild(row);
     });
@@ -253,37 +253,37 @@ function renderPagination(totalPayments) {
 
 async function showPaymentDetails(paymentId) {
     try {
-        const payment = await apiCall(`${PAYMENT_API_BASE}/${paymentId}`);
+        const payment = await apiCall(`${PAYMENT_API_URL}/${paymentId}`);
 
         const detailsContent = document.getElementById('paymentDetailsContent');
         detailsContent.innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Task Information</h6>
-                        <p><strong>Task:</strong> ${payment.taskTitle}</p>
-                        <p><strong>Amount:</strong> Rs ${payment.amount.toFixed(2)}</p>
-                        <p><strong>Currency:</strong> ${payment.currency || 'LKR'}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Payment Information</h6>
-                        <p><strong>Date:</strong> ${new Date(payment.paymentDate).toLocaleDateString()}</p>
-                        <p><strong>Status:</strong> ${getPaymentStatusBadge(payment.paymentStatus)}</p>
-                        ${payment.stripeSessionId ? `<p><strong>Stripe Session ID:</strong> ${payment.stripeSessionId}</p>` : ''}
-                    </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Task Information</h6>
+                    <p><strong>Task:</strong> ${payment.taskTitle}</p>
+                    <p><strong>Amount:</strong> Rs ${payment.amount.toFixed(2)}</p>
+                    <p><strong>Currency:</strong> ${payment.currency || 'LKR'}</p>
                 </div>
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <h6>Client Information</h6>
-                        <p><strong>Name:</strong> ${payment.clientName}</p>
-                        <p><strong>ID:</strong> ${payment.clientId}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Freelancer Information</h6>
-                        <p><strong>Name:</strong> ${payment.freelancerName}</p>
-                        <p><strong>ID:</strong> ${payment.freelancerId}</p>
-                    </div>
+                <div class="col-md-6">
+                    <h6>Payment Information</h6>
+                    <p><strong>Date:</strong> ${new Date(payment.paymentDate).toLocaleDateString()}</p>
+                    <p><strong>Status:</strong> ${getPaymentStatusBadge(payment.paymentStatus)}</p>
+                    ${payment.stripeSessionId ? `<p><strong>Stripe Session ID:</strong> ${payment.stripeSessionId}</p>` : ''}
                 </div>
-            `;
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h6>Client Information</h6>
+                    <p><strong>Name:</strong> ${payment.clientName}</p>
+                    <p><strong>ID:</strong> ${payment.clientId}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Freelancer Information</h6>
+                    <p><strong>Name:</strong> ${payment.freelancerName}</p>
+                    <p><strong>ID:</strong> ${payment.freelancerId}</p>
+                </div>
+            </div>
+        `;
 
         const modal = new bootstrap.Modal(document.getElementById('paymentDetailsModal'));
         modal.show();
@@ -303,9 +303,9 @@ function showError(message) {
     alert.style.zIndex = '9999';
     alert.style.minWidth = '300px';
     alert.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
 
     document.body.appendChild(alert);
 

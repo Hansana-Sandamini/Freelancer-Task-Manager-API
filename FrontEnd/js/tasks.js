@@ -2,6 +2,8 @@ const TASK_API_BASE = "http://localhost:8085/api/v1/tasks";
 const CATEGORY_API_URL = "http://localhost:8085/api/v1/task-categories";
 const PROPOSAL_API_URL = "http://localhost:8085/api/v1/proposals";
 const REVIEW_API_URL = "http://localhost:8085/api/v1/reviews";
+const PAYMENT_API_BASE = "http://localhost:8085/api/v1/payments";
+const STRIPE_PUBLISHABLE_KEY = "pk_test_51S6ZBnFQgJWoxJFed40OYrsDWSXufK1kJL2BOb1miDMmeGJUmCxeuMQZh7MAgGvTo3qml5nmqJ45xBYZ8ZNyVHIX001bXmCRhQ";
 import { openChat } from './chat.js';
 
 // Get token, role, and email from localStorage
@@ -82,6 +84,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize star rating
     initStarRating();
+
+    // Add payment button event listener
+    taskCardContainer.addEventListener('click', (e) => {
+        const payButton = e.target.closest('.pay-button');
+        if (payButton) {
+            const taskId = payButton.getAttribute('data-task-id');
+            initiatePayment(taskId);
+        }
+    });
 });
 
 // Setup event listeners for filters and pagination
@@ -89,6 +100,103 @@ function setupEventListeners() {
     applyFiltersBtn.addEventListener('click', applyFilters);
     clearFiltersBtn.addEventListener('click', clearFilters);
     refreshBtn.addEventListener('click', refreshTasks);
+}
+
+// ===================== Payment Functions =====================
+async function initiatePayment(taskId) {
+    try {
+        showPaymentLoading(true);
+
+        const response = await fetch(`${PAYMENT_API_BASE}/create-checkout-session/${taskId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.code === 200) {
+            // Redirect to Stripe Checkout
+            const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+            const { error } = await stripe.redirectToCheckout({
+                sessionId: result.data
+            });
+
+            if (error) {
+                showPaymentError("Payment initialization failed: " + error.message);
+            }
+        } else {
+            showPaymentError("Failed to initiate payment: " + result.message);
+        }
+    } catch (error) {
+        console.error("Error initiating payment:", error);
+        showPaymentError("Error initiating payment. Please try again.");
+    } finally {
+        showPaymentLoading(false);
+    }
+}
+
+function showPaymentLoading(show) {
+    let loadingElement = document.getElementById('paymentLoading');
+
+    if (!loadingElement) {
+        loadingElement = document.createElement('div');
+        loadingElement.id = 'paymentLoading';
+        loadingElement.className = 'payment-loading';
+        loadingElement.innerHTML = `
+            <div class="payment-loading-content">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p>Processing payment...</p>
+            </div>
+        `;
+        document.body.appendChild(loadingElement);
+    }
+
+    loadingElement.style.display = show ? 'flex' : 'none';
+}
+
+function showPaymentError(message) {
+    // Remove any existing error modal
+    const existingModal = document.getElementById('paymentErrorModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Create error modal
+    const errorModal = document.createElement('div');
+    errorModal.id = 'paymentErrorModal';
+    errorModal.className = 'modal fade';
+    errorModal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Payment Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>${message}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(errorModal);
+
+    // Show the modal
+    const modal = new bootstrap.Modal(errorModal);
+    modal.show();
+
+    // Remove modal from DOM when hidden
+    errorModal.addEventListener('hidden.bs.modal', function () {
+        errorModal.remove();
+    });
 }
 
 // ===================== Filter Functions =====================
@@ -274,7 +382,7 @@ async function loadTaskDetails(tasks) {
 }
 
 // ===================== Render Tasks =====================
-function renderTasks(tasks, freelancerProposals = [], freelancerRejectedProposals = [], hasReviewedMap = {}) {
+async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedProposals = [], hasReviewedMap = {}) {
     taskCardContainer.innerHTML = "";
 
     if (tasks.length === 0) {
@@ -296,7 +404,7 @@ function renderTasks(tasks, freelancerProposals = [], freelancerRejectedProposal
         }
     });
 
-    tasks.forEach(task => {
+    for (const task of tasks) {
         const card = document.createElement("div");
         card.className = "col";
 
@@ -341,10 +449,49 @@ function renderTasks(tasks, freelancerProposals = [], freelancerRejectedProposal
                             title="Chat with Freelancer">
                         <i class="fas fa-comments"></i>
                     </button>
-                    <button class="btn btn-primary pay-button" data-task-id="${task.id}">
-                        <i class="fas fa-credit-card"></i> Pay Now
-                    </button>
                 `;
+
+                // Check payment status and add pay button if needed
+                let paymentStatus = '';
+                let paymentButton = '';
+
+                try {
+                    const paymentResponse = await fetch(`${PAYMENT_API_BASE}/task/${task.id}`, {
+                        headers: {
+                            "Authorization": "Bearer " + localStorage.getItem("token")
+                        }
+                    });
+
+                    if (paymentResponse.ok) {
+                        const paymentResult = await paymentResponse.json();
+                        if (paymentResult.code === 200 && paymentResult.data) {
+                            const payment = paymentResult.data;
+
+                            // Only show pay button if payment is pending
+                            if (payment.paymentStatus === 'PENDING') {
+                                paymentButton = `
+                                    <button class="btn btn-primary pay-button" data-task-id="${task.id}">
+                                        <i class="fas fa-credit-card"></i> Pay Now
+                                    </button>
+                                `;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error checking payment status:", error);
+                }
+
+                // If no payment record exists yet, show the pay button
+                if (!paymentButton && task.freelancerId) {
+                    paymentButton = `
+                        <button class="btn btn-primary pay-button" data-task-id="${task.id}">
+                            <i class="fas fa-credit-card"></i> Pay Now
+                        </button>
+                    `;
+                }
+
+                // Add the payment status and button to the action buttons
+                actionButtons += paymentStatus + paymentButton;
             }
 
         } else if (role === "ADMIN") {
@@ -446,7 +593,7 @@ function renderTasks(tasks, freelancerProposals = [], freelancerRejectedProposal
         `;
 
         taskCardContainer.appendChild(card);
-    });
+    }
 
     // Add event listeners for propose and chat buttons
     taskCardContainer.addEventListener('click', (e) => {

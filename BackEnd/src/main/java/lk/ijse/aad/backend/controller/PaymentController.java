@@ -3,7 +3,9 @@ package lk.ijse.aad.backend.controller;
 import lk.ijse.aad.backend.dto.ApiResponse;
 import lk.ijse.aad.backend.dto.PaymentDTO;
 import lk.ijse.aad.backend.entity.Task;
+import lk.ijse.aad.backend.entity.User;
 import lk.ijse.aad.backend.repository.TaskRepository;
+import lk.ijse.aad.backend.repository.UserRepository;
 import lk.ijse.aad.backend.service.PaymentService;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
@@ -23,6 +25,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
     private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
 
     @PostMapping("/create-checkout-session/{taskId}")
     @PreAuthorize("hasRole('CLIENT')")
@@ -35,10 +38,13 @@ public class PaymentController {
             Task task = taskRepository.findById(taskId)
                     .orElseThrow(() -> new RuntimeException("Task not found with ID: " + taskId));
 
-            // 2. Verify the authenticated user owns this task
-            String currentUsername = authentication.getName();
-            Long currentUserId = Long.valueOf(currentUsername);
+            // 2. Get the user ID by querying the database with the email
+            String email = authentication.getName();
+            User user = (User) userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+            Long currentUserId = user.getId();
 
+            // 3. Verify the authenticated user owns this task
             if (!task.getClient().getId().equals(currentUserId)) {
                 return ResponseEntity.status(403).body(new ApiResponse(
                         403,
@@ -47,7 +53,7 @@ public class PaymentController {
                 ));
             }
 
-            // 3. Verify the task has a freelancer assigned
+            // 4. Verify the task has a freelancer assigned
             if (task.getFreelancer() == null) {
                 return ResponseEntity.badRequest().body(new ApiResponse(
                         400,
@@ -56,11 +62,10 @@ public class PaymentController {
                 ));
             }
 
-            // 4. Get the amount from the task (assuming task has a budget field)
-            // If your task doesn't have a budget, you'll need to add it
-            double amount = task.getPayment().getAmount(); // Or use a fixed amount if needed
+            // 5. Get the amount from the task
+            double amount = task.getPayment().getAmount();
 
-            // 5. Create the checkout session
+            // 6. Create the checkout session
             SessionCreateParams params = SessionCreateParams.builder()
                     .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                     .setMode(SessionCreateParams.Mode.PAYMENT)
@@ -71,7 +76,7 @@ public class PaymentController {
                                     .setQuantity(1L)
                                     .setPriceData(
                                             SessionCreateParams.LineItem.PriceData.builder()
-                                                    .setCurrency("usd") // Changed from "inr" to "usd"
+                                                    .setCurrency("usd")
                                                     .setUnitAmount((long) (amount * 100)) // dollars → cents
                                                     .setProductData(
                                                             SessionCreateParams.LineItem.PriceData.ProductData.builder()
@@ -101,6 +106,25 @@ public class PaymentController {
             return ResponseEntity.badRequest().body(new ApiResponse(
                     500,
                     "Failed to create checkout session: " + e.getMessage(),
+                    null
+            ));
+        }
+    }
+
+    @GetMapping("/task/{taskId}")
+    @PreAuthorize("hasAnyRole('CLIENT', 'FREELANCER', 'ADMIN')")
+    public ResponseEntity<ApiResponse> getPaymentByTaskId(@PathVariable Long taskId) {
+        try {
+            PaymentDTO payment = paymentService.getPaymentByTaskId(taskId);
+            return ResponseEntity.ok(new ApiResponse(
+                    200,
+                    "Payment Retrieved Successfully",
+                    payment
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.ok(new ApiResponse(
+                    404,
+                    "No payment found for this task",
                     null
             ));
         }
