@@ -233,7 +233,26 @@
                     <form id="profileForm">
                         <div class="row">
                             <div class="col-md-4 text-center">
-                                <img id="profileImage" src="https://ui-avatars.com/api/?name=User+Name&background=4e73df&color=fff&bold=true" alt="User" class="rounded-circle mb-3" width="150" height="150">
+                                <div class="position-relative d-inline-block">
+                                    <img id="profileImage" src="https://ui-avatars.com/api/?name=User+Name&background=4e73df&color=fff&bold=true"
+                                         alt="User" class="rounded-circle mb-3" width="250" height="250">
+                                    <label for="profileImageUpload" class="btn btn-sm btn-primary position-absolute rounded-circle"
+                                           style="bottom: 20px; right: 10px; width: 36px; height: 36px; padding: 0;">
+                                        <i class="fas fa-camera m-0"></i>
+                                    </label>
+                                    <input type="file" id="profileImageUpload" accept="image/*" class="d-none">
+                                    <button type="button" class="btn btn-sm btn-danger position-absolute rounded-circle d-none"
+                                            id="deleteProfileImageBtn"
+                                            style="bottom: 20px; left: 10px; width: 36px; height: 36px; padding: 0;">
+                                        <i class="fas fa-trash m-0"></i>
+                                    </button>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-white">Max 2MB (JPG, PNG)</small>
+                                </div>
+                                <div class="progress mt-2 d-none" id="uploadProgress" style="height: 5px;">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
                             </div>
                             <div class="col-md-8">
                                 <div class="mb-3">

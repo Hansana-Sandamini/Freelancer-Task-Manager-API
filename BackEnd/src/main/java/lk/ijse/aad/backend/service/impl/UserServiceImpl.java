@@ -48,6 +48,13 @@ public class UserServiceImpl implements UserService {
             existingUser.setName(userDTO.getName());
             existingUser.setEmail(userDTO.getEmail());
 
+            // Update profile image if provided
+            if (userDTO.getProfileImage() != null && !userDTO.getProfileImage().isEmpty()) {
+                existingUser.setProfileImage(userDTO.getProfileImage());
+            } else {
+                existingUser.setProfileImage(null);
+            }
+
             // Update role-specific fields
             existingUser.setBio(userDTO.getBio());
             existingUser.setCompany(userDTO.getCompany());
@@ -165,6 +172,7 @@ public class UserServiceImpl implements UserService {
             userDTO.setBio(user.getBio());
             userDTO.setCompany(user.getCompany());
             userDTO.setSkills(user.getSkills());
+            userDTO.setProfileImage(user.getProfileImage());
             return userDTO;
         } catch (Exception e) {
             log.error("Error while converting user to DTO: {}", user.getEmail(), e);
