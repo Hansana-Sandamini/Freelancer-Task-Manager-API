@@ -288,7 +288,7 @@ function displayNotifications(notifications) {
         listItem.innerHTML = `
             <div class="d-flex justify-content-between align-items-start">
                 <div class="me-3 flex-grow-1">
-                    <p class="mb-1 small">${escapeHtml(message)}</p>
+                    <p class="mb-1 small" style="color: #0b1a4b">${escapeHtml(message)}</p>
                     <small class="text-muted">${formatNotificationTime(
             notification.createdAt || notification.createdDate || notification.date || notification.timestamp
         )}</small>

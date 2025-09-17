@@ -254,9 +254,9 @@ function renderProposals(proposalsToRender = []) {
     if (proposalsToRender.length === 0) {
         cardContainer.innerHTML = `
             <div class="col-12 text-center py-5">
-                <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">No proposals found</h4>
-                <p class="text-muted">${filteredProposals.length === 0 ? 'No proposals available.' : 'Try adjusting your filters.'}</p>
+                <i class="fas fa-file-alt fa-3x text-white mb-3"></i>
+                <h4 class="text-white">No proposals found</h4>
+                <p class="text-white">${filteredProposals.length === 0 ? 'No proposals available.' : 'Try adjusting your filters.'}</p>
             </div>
         `;
         return;
