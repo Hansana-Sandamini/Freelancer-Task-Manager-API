@@ -43,6 +43,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!localStorage.getItem("token")) {
         window.location.href = "/FrontEnd/index.html";
     }
+
+    // Update timestamps every minute
+    setInterval(() => {
+        renderProposalsWithPagination();
+    }, 60000); // 60 seconds
 });
 
 // Setup filter event listeners
@@ -199,6 +204,14 @@ function getPaginatedProposals() {
 }
 
 function renderProposalsWithPagination() {
+    // Sort filtered proposals by submittedAt in descending order
+    const sortedFilteredProposals = filteredProposals.sort((a, b) => {
+        const dateA = new Date(a.submittedAt);
+        const dateB = new Date(b.submittedAt);
+        if (isNaN(dateA.getTime())) return 1;
+        if (isNaN(dateB.getTime())) return -1;
+        return dateB - dateA; // Descending order
+    });
     const paginatedProposals = getPaginatedProposals();
     renderProposals(paginatedProposals);
     renderPagination(filteredProposals.length);
@@ -232,7 +245,14 @@ async function loadProposals() {
 
         const result = await response.json();
         if (result.code === 200) {
-            proposals = result.data || [];
+            // Sort proposals by submittedAt in descending order (newest first)
+            proposals = (result.data || []).sort((a, b) => {
+                const dateA = new Date(a.submittedAt);
+                const dateB = new Date(b.submittedAt);
+                if (isNaN(dateA.getTime())) return 1;
+                if (isNaN(dateB.getTime())) return -1;
+                return dateB - dateA; // Descending order
+            });
             filteredProposals = [...proposals];
             currentPage = 1;
             renderProposalsWithPagination();
@@ -286,7 +306,7 @@ function renderProposals(proposalsToRender = []) {
                     <p class="card-text"><strong>Freelancer:</strong> ${proposal.freelancerName || "Unknown Freelancer"}</p>
                     <p class="card-text"><strong>Cover Letter:</strong> ${coverLetter}</p>
                     <p class="card-text"><strong>Bid Amount:</strong> Rs ${proposal.bidAmount.toFixed(2)}</p>
-                    <p class="card-text"><strong>Submitted At:</strong> ${formatDate(proposal.submittedAt)}</p>
+                    <p class="card-text submitted-time"><strong>Submitted:</strong> ${getRelativeTime(proposal.submittedAt)}</p>
                     <p class="card-text"><strong>Status:</strong> <span class="${statusClass} fs-6 px-3 py-2">${proposal.status}</span></p>
                     <div class="d-flex justify-content-end gap-2">
                         ${renderActionButtons(proposal)}
@@ -297,6 +317,34 @@ function renderProposals(proposalsToRender = []) {
 
         cardContainer.appendChild(card);
     });
+}
+
+// Function to calculate relative time
+function getRelativeTime(timestamp) {
+    if (!timestamp) return "Unknown time";
+
+    const now = new Date();
+    const submittedTime = new Date(timestamp);
+    if (isNaN(submittedTime.getTime())) return "Submitted: Invalid date";
+
+    const diffMs = now - submittedTime; // Difference in milliseconds
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSeconds < 60) {
+        return "Submitted just now";
+    } else if (diffMinutes < 60) {
+        return `Submitted ${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    } else if (diffHours < 24) {
+        return `Submitted ${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    } else if (diffDays < 30) {
+        return `Submitted ${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    } else {
+        const months = Math.floor(diffDays / 30);
+        return `Submitted ${months} month${months === 1 ? '' : 's'} ago`;
+    }
 }
 
 // Render action buttons based on user role
@@ -347,7 +395,7 @@ function viewProposalDetails(proposalId, editMode = false) {
     document.getElementById("modalFreelancer").textContent = proposal.freelancerName || "Unknown Freelancer";
     document.getElementById("modalCoverLetter").value = proposal.coverLetter || "No cover letter provided";
     document.getElementById("modalBidAmount").value = proposal.bidAmount.toFixed(2);
-    document.getElementById("modalSubmittedAt").textContent = formatDate(proposal.submittedAt);
+    document.getElementById("modalSubmittedAt").textContent = getRelativeTime(proposal.submittedAt);
     document.getElementById("modalStatus").textContent = proposal.status;
 
     const coverLetterInput = document.getElementById("modalCoverLetter");
@@ -435,7 +483,6 @@ async function saveProposalChanges() {
 
             loadProposals();
         } else {
-            alert("Failed to update proposal: " + result.message);
             showErrorAlert("Failed", "Failed to update proposal: " + result.message);
         }
     } catch (error) {

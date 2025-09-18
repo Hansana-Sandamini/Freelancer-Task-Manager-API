@@ -246,8 +246,10 @@ function filterTasks(tasks) {
 
         // Date filter
         if (currentFilters.date) {
+            if (!task.createdAt) return false; // Skip tasks without createdAt
             const days = parseInt(currentFilters.date);
-            const taskDate = new Date(task.createdAt || task.deadline);
+            const taskDate = new Date(task.createdAt);
+            if (isNaN(taskDate.getTime())) return false; // Skip invalid dates
             const filterDate = new Date();
             filterDate.setDate(filterDate.getDate() - days);
 
@@ -317,8 +319,17 @@ async function loadTasks() {
             tasks = await apiCall(TASK_API_BASE);
         }
 
-        allTasks = tasks;
-        totalTasks = tasks.length;
+        // Sort tasks by createdAt in descending order (newest first)
+        allTasks = tasks.sort((a, b) => {
+            const dateA = new Date(a.createdAt);
+            const dateB = new Date(b.createdAt);
+            // Handle invalid dates by pushing them to the bottom
+            if (isNaN(dateA.getTime())) return 1;
+            if (isNaN(dateB.getTime())) return -1;
+            return dateB - dateA; // Descending order
+        });
+
+        totalTasks = allTasks.length;
 
         currentPage = 1; // Reset to first page
         renderTasksWithPagination();
@@ -332,7 +343,15 @@ async function loadTasks() {
 // Render tasks with pagination
 function renderTasksWithPagination() {
     const filteredTasks = filterTasks(allTasks);
-    const paginatedTasks = getPaginatedTasks(filteredTasks);
+    // Sort filtered tasks by createdAt in descending order
+    const sortedFilteredTasks = filteredTasks.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        if (isNaN(dateA.getTime())) return 1;
+        if (isNaN(dateB.getTime())) return -1;
+        return dateB - dateA; // Descending order
+    });
+    const paginatedTasks = getPaginatedTasks(sortedFilteredTasks);
 
     // Update freelancer proposals and reviews for the current page
     loadTaskDetails(paginatedTasks);
@@ -578,6 +597,7 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">${task.title}</h5>
+                    <p class="card-text posted-time"><strong>Posted:</strong> ${getRelativeTime(task.createdAt)}</p>
                     <p class="card-text"><strong>Category:</strong> ${task.taskCategoryName}</p>
                     <p class="card-text">${task.description}</p>
                     <p class="card-text"><strong>Status:</strong> ${getStatusBadge(task.status)}</p>
@@ -596,10 +616,11 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
         taskCardContainer.appendChild(card);
     }
 
-    // Add event listeners for propose and chat buttons
+    // Add event listeners for propose, chat, and pay buttons
     taskCardContainer.addEventListener('click', (e) => {
         const proposeButton = e.target.closest('.propose-button');
         const chatButton = e.target.closest('.chat-button');
+        const payButton = e.target.closest('.pay-button');
 
         if (proposeButton) {
             const taskId = proposeButton.getAttribute('data-task-id');
@@ -613,6 +634,11 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
             const receiverName = chatButton.getAttribute('data-receiver-name');
             console.log("Opening chat for taskId:", taskId, "receiverId:", receiverId);
             openChat(taskId, receiverId, receiverName);
+        }
+
+        if (payButton) {
+            const taskId = payButton.getAttribute('data-task-id');
+            initiatePayment(taskId);
         }
     });
 }
@@ -1000,4 +1026,30 @@ function initStarRating() {
             });
         });
     });
+}
+
+// Function to calculate relative time
+function getRelativeTime(timestamp) {
+    if (!timestamp) return "Unknown time";
+
+    const now = new Date();
+    const postedTime = new Date(timestamp);
+    const diffMs = now - postedTime; // Difference in milliseconds
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSeconds < 60) {
+        return "Posted just now";
+    } else if (diffMinutes < 60) {
+        return `Posted ${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    } else if (diffHours < 24) {
+        return `Posted ${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    } else if (diffDays < 30) {
+        return `Posted ${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    } else {
+        const months = Math.floor(diffDays / 30);
+        return `Posted ${months} month${months === 1 ? '' : 's'} ago`;
+    }
 }
