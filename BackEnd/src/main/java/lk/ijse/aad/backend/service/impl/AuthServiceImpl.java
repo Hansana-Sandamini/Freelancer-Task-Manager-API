@@ -3,11 +3,14 @@ package lk.ijse.aad.backend.service.impl;
 import lk.ijse.aad.backend.dto.AuthDTO;
 import lk.ijse.aad.backend.dto.AuthResponseDTO;
 import lk.ijse.aad.backend.dto.RegisterDTO;
+import lk.ijse.aad.backend.entity.NotificationType;
 import lk.ijse.aad.backend.entity.Role;
 import lk.ijse.aad.backend.entity.User;
 import lk.ijse.aad.backend.repository.AuthRepository;
+import lk.ijse.aad.backend.repository.UserRepository;
 import lk.ijse.aad.backend.service.EmailService;
 import lk.ijse.aad.backend.service.AuthService;
+import lk.ijse.aad.backend.service.NotificationService;
 import lk.ijse.aad.backend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,16 +22,20 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
     private final AuthRepository authRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     @Override
     public AuthResponseDTO authenticate(AuthDTO authDTO) {
@@ -93,6 +100,18 @@ public class AuthServiceImpl implements AuthService {
                         "<p>Get started by logging in to your account and exploring our features.</p>" +
                         "<p>Best regards,<br>The TaskFlow Team</p>"
         );
+
+        // Notify admins about new registration
+        List<User> admins = userRepository.findByRole(Role.ADMIN);
+        for (User admin : admins) {
+            notificationService.createAndSendNotification(
+                    admin.getId(),
+                    "New user registered: " + registerDTO.getName() + " (" + registerDTO.getEmail() + ")",
+                    NotificationType.USER_REGISTERED,
+                    null,
+                    null
+            );
+        }
 
         return "User registered successfully";
     }

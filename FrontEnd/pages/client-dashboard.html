@@ -129,19 +129,17 @@
 
         <!-- Main Content Area -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Client Dashboard</h1>
+            <!-- Welcome Message -->
+            <div class="welcome-message fade-in d-flex justify-content-between align-items-center">
+                <div>
+                    <h3>Welcome back, Client User!</h3>
+                    <p>Manage your tasks, review proposals, and track progress from your dashboard.</p>
+                </div>
                 <div class="btn-toolbar mb-2 mb-md-0">
-                    <button id="btn-new-task" type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                    <button type="button" class="btn btn-sm btn-primary">
                         <i class="fas fa-plus me-1"></i> New Task
                     </button>
                 </div>
-            </div>
-
-            <!-- Welcome Message -->
-            <div class="welcome-message fade-in">
-                <h3>Welcome back, Client User!</h3>
-                <p>Manage your tasks, review proposals, and track progress from your dashboard.</p>
             </div>
 
             <!-- Stats Cards -->
@@ -222,11 +220,38 @@
                     </div>
                 </div>
             </div>
+
+            <div class="row mb-4">
+                <!-- Recent Submitted Proposals -->
+                <div class="col-md-6">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Recent Submitted Proposals</h5>
+                            <ul id="recentProposalsList" class="list-group list-group-flush">
+                                <li class="list-group-item text-center text-white">No recent proposals available</li>
+                            </ul>
+                            <div class="text-center mt-3">
+                                <a href="/Freelancer-Task-Manager-API/FrontEnd/pages/proposals.html" class="btn btn-primary">View More</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Proposal Status Pie Chart -->
+                <div class="col-md-6">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Proposal Status Distribution</h5>
+                            <canvas id="proposalStatusChart" style="max-height: 400px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous">

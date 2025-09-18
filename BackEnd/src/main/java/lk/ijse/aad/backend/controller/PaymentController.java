@@ -189,4 +189,15 @@ public class PaymentController {
         ));
     }
 
+    @GetMapping("/total-revenue")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> getTotalRevenue() {
+        Double totalRevenue = paymentService.getTotalRevenue();
+        return ResponseEntity.ok(new ApiResponse(
+                200,
+                "Total Revenue Retrieved Successfully",
+                totalRevenue
+        ));
+    }
+
 }

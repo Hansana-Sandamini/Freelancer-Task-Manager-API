@@ -1,13 +1,12 @@
 package lk.ijse.aad.backend.service.impl;
 
 import lk.ijse.aad.backend.dto.ReviewDTO;
-import lk.ijse.aad.backend.entity.NotificationType;
-import lk.ijse.aad.backend.entity.Review;
-import lk.ijse.aad.backend.entity.Task;
-import lk.ijse.aad.backend.entity.User;
+import lk.ijse.aad.backend.entity.*;
 import lk.ijse.aad.backend.repository.ReviewRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.repository.AuthRepository;
+import lk.ijse.aad.backend.repository.UserRepository;
+import lk.ijse.aad.backend.service.EmailService;
 import lk.ijse.aad.backend.service.NotificationService;
 import lk.ijse.aad.backend.service.ReviewService;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +26,10 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final AuthRepository authRepository;
     private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
     private final ModelMapper modelMapper;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     @Override
     public void saveReview(ReviewDTO reviewDTO) {
@@ -82,6 +83,29 @@ public class ReviewServiceImpl implements ReviewService {
                     task.getId(),
                     task.getTitle()
             );
+
+            // Send email to freelancer
+            String subject = "🌟 New Review Received for Task: " + task.getTitle();
+            String emailContent = "<h2>Hello " + freelancer.getName() + "!</h2>" +
+                    "<p>You've received a new review from " + client.getName() + " for the task <b>" + task.getTitle() + "</b>.</p>" +
+                    "<p><b>Rating:</b> " + review.getRating() + "/5</p>" +
+                    "<p><b>Comment:</b> " + (review.getComment() != null ? review.getComment() : "No comment provided") + "</p>" +
+                    "<p>Keep up the great work!</p>" +
+                    "<p>Best regards,<br>The TaskFlow Team</p>";
+            emailService.sendEmail(freelancer.getEmail(), subject, emailContent);
+
+            // Send notifications to all admins
+            List<User> admins = userRepository.findByRole(Role.ADMIN);
+            for (User admin : admins) {
+                notificationService.createAndSendNotification(
+                        admin.getId(),
+                        "A new review was given by client " + client.getName() +
+                                " for freelancer " + freelancer.getName() + " on task: " + task.getTitle(),
+                        NotificationType.REVIEW_POSTED,
+                        task.getId(),
+                        task.getTitle()
+                );
+            }
 
             log.info("Review saved successfully for task: {} by client: {}", task.getTitle(), client.getName());
 

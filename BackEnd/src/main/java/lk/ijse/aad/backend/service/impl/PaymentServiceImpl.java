@@ -153,6 +153,19 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    @Override
+    public Double getTotalRevenue() {
+        try {
+            return paymentRepository.findAll().stream()
+                    .filter(payment -> payment.getStatus() == PaymentStatus.COMPLETED)
+                    .mapToDouble(Payment::getAmount)
+                    .sum();
+        } catch (Exception e) {
+            log.error("Error while calculating total revenue", e);
+            throw new RuntimeException("Failed to calculate total revenue: " + e.getMessage(), e);
+        }
+    }
+
     private PaymentDTO convertToDTO(Payment payment) {
         PaymentDTO dto = modelMapper.map(payment, PaymentDTO.class);
         dto.setClientId(payment.getClient().getId());
