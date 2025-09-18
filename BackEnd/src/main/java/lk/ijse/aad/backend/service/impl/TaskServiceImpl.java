@@ -128,9 +128,17 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTask(String taskId) {
         try {
             Long id = Long.parseLong(taskId);
-            if (!taskRepository.existsById(id)) {
-                throw new RuntimeException("Task not found with ID: " + taskId);
+            Task task = taskRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Task not found with ID: " + taskId));
+
+            // Explicitly clear relationships
+            task.getNotifications().clear();
+            task.getProposals().clear();
+            task.getReviews().clear();
+            if (task.getPayment() != null) {
+                task.setPayment(null);
             }
+
             taskRepository.deleteById(id);
             log.info("Task deleted successfully: {}", taskId);
 

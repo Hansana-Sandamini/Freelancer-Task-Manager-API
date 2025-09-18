@@ -1,5 +1,6 @@
 const PROFILE_API_BASE = 'http://localhost:8085/api/v1/users';
 const UPLOAD_API = 'http://localhost:8085/api/v1/upload/profile-image';
+import { showSuccessAlert, showErrorAlert, showConfirmAlert, showInfoAlert, showWarningAlert } from './alert-util.js';
 
 // Function to get user-specific storage key
 function getUserStorageKey(key) {
@@ -117,12 +118,12 @@ function setupProfileImageUpload() {
 
         // Validate file type and size
         if (!file.type.match('image/jpeg') && !file.type.match('image/png')) {
-            alert('Please select a JPG or PNG image.');
+            showWarningAlert("Warning!", "Please select a JPG or PNG image.");
             return;
         }
 
         if (file.size > 2 * 1024 * 1024) { // 2MB limit
-            alert('Image size must be less than 2MB.');
+            showWarningAlert("Warning!", "Image size must be less than 2MB.");
             return;
         }
 
@@ -177,11 +178,11 @@ function setupProfileImageUpload() {
             // Trigger update of all profile images on the page
             triggerProfileImageUpdate(result.data.imageUrl);
 
-            alert('Profile image updated successfully!');
+            showSuccessAlert("Success!", "Profile image updated successfully...!");
 
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Failed to upload image. Please try again.');
+            showErrorAlert("Error", "Failed to upload image. Please try again.");
 
             // Revert to previous image
             const previousImage = localStorage.getItem(getUserStorageKey('profile_image')) ||
@@ -238,11 +239,19 @@ function isDefaultImage(imageUrl) {
 
 // Function to delete profile image
 async function deleteProfileImage() {
-    if (!confirm('Are you sure you want to delete your profile image?')) {
-        return;
-    }
 
     try {
+        const result = await showConfirmAlert(
+            "Are you sure?",
+            "Do you really want to delete your profile image?",
+            "Yes, delete it",
+            "Cancel"
+        );
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
         const token = localStorage.getItem('token');
         const response = await fetch(`${PROFILE_API_BASE}/profile/image`, {
             method: 'DELETE',
@@ -273,10 +282,10 @@ async function deleteProfileImage() {
         // Trigger update of all profile images on the page
         triggerProfileImageUpdate(defaultImageUrl);
 
-        alert('Profile image deleted successfully!');
+        showSuccessAlert("Deleted", "Profile image deleted successfully!");
     } catch (error) {
         console.error('Error deleting profile image:', error);
-        alert('Failed to delete profile image. Please try again.');
+        showErrorAlert("Error", "Failed to delete profile image. Please try again.");
     }
 }
 
@@ -413,7 +422,7 @@ function fallbackToLocalStorage() {
     // Toggle delete button based on image type
     toggleDeleteButton();
 
-    alert('Could not load profile data. Using cached information.');
+    showInfoAlert("Offline Mode", "Could not load profile data. Using cached information.");
 }
 
 // Store original image when editing starts
@@ -511,14 +520,14 @@ async function saveProfileChanges() {
         if (profileData.company) localStorage.setItem('profile_company', profileData.company);
         if (profileData.skills) localStorage.setItem('profile_skills', profileData.skills);
 
-        alert('Profile updated successfully!');
+        showSuccessAlert("Success", "Profile updated successfully!");
         disableEditing();
 
         // Dispatch event to update navbar (handled by navbar.js)
         triggerProfileImageUpdate(localStorage.getItem(getUserStorageKey('profile_image')) || localStorage.getItem('profile_image'));
     } catch (error) {
         console.error('Error saving profile:', error);
-        alert('Failed to update profile. Please try again.');
+        showErrorAlert("Error", "Failed to update profile. Please try again.");
     }
 }
 

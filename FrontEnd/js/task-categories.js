@@ -1,4 +1,5 @@
 const CATEGORY_API_BASE = "http://localhost:8085/api/v1/task-categories";
+import { showSuccessAlert, showErrorAlert, showConfirmAlert } from './alert-util.js';
 
 const taskCategoryTableBody = document.getElementById("taskCategoryTableBody");
 const taskCategoryForm = document.getElementById("taskCategoryForm");
@@ -67,10 +68,11 @@ async function loadTaskCategories() {
             currentPage = 1;
             renderTableWithPagination();
         } else {
-            alert("Error fetching categories: " + data.message);
+            showErrorAlert("Error", "Error fetching categories: " + data.message);
         }
     } catch (error) {
         console.error("Error loading categories:", error);
+        showErrorAlert("Error", "Failed to load categories.");
     }
 }
 
@@ -232,13 +234,13 @@ taskCategoryForm.addEventListener("submit", async (e) => {
             loadTaskCategories();
             taskCategoryForm.reset();
             bootstrap.Modal.getInstance(document.getElementById("newTaskCategoryModal")).hide();
-            alert("Category added successfully!");
+            showSuccessAlert("Success", "Category added successfully!");
         } else {
-            alert("Error adding category: " + data.message);
+            showErrorAlert("Error", "Error adding category: " + data.message);
         }
     } catch (error) {
         console.error("Error adding category:", error);
-        alert("Error adding category. Please try again.");
+        showErrorAlert("Error", "Error adding category. Please try again.");
     }
 });
 
@@ -264,13 +266,14 @@ async function openEditModal(id) {
             const editModal = new bootstrap.Modal(document.getElementById('editTaskCategoryModal'));
             editModal.show();
         } else {
-            alert("Error fetching category details: " + data.message);
+            showErrorAlert("Error", "Error fetching category details: " + data.message);
         }
     } catch (error) {
         console.error("Error fetching category:", error);
-        alert("Error fetching category details. Please try again.");
+        showErrorAlert("Error", "Error fetching category details. Please try again.");
     }
 }
+window.openEditModal = openEditModal;
 
 // ==================== Update Category ====================
 editTaskCategoryForm.addEventListener("submit", async (e) => {
@@ -297,19 +300,20 @@ editTaskCategoryForm.addEventListener("submit", async (e) => {
         if (data.code === 200) {
             loadTaskCategories();
             bootstrap.Modal.getInstance(document.getElementById("editTaskCategoryModal")).hide();
-            alert("Category updated successfully!");
+            showSuccessAlert("Success", "Category updated successfully!");
         } else {
-            alert("Error updating category: " + data.message);
+            showErrorAlert("Error", "Error updating category: " + data.message);
         }
     } catch (error) {
         console.error("Error updating category:", error);
-        alert("Error updating category. Please try again.");
+        showErrorAlert("Error", "Error updating category. Please try again.");
     }
 });
 
 // ==================== Delete Category ====================
 async function deleteCategory(id) {
-    if (!confirm("Are you sure you want to delete this category?")) return;
+    const confirmed = await showConfirmAlert("Are you sure?", "This category will be permanently deleted.");
+    if (!confirmed) return;
 
     try {
         const response = await fetch(`${CATEGORY_API_BASE}/${id}`, {
@@ -323,12 +327,13 @@ async function deleteCategory(id) {
 
         if (data.code === 200) {
             loadTaskCategories();
-            alert("Category deleted successfully!");
+            showSuccessAlert("Deleted", "Category deleted successfully!");
         } else {
             alert("Error deleting category: " + data.message);
         }
     } catch (error) {
         console.error("Error deleting category:", error);
-        alert("Error deleting category. Please try again.");
+        showErrorAlert("Error", "Error deleting category. Please try again.");
     }
 }
+window.deleteCategory = deleteCategory;
