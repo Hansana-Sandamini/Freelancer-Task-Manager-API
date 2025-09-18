@@ -304,6 +304,7 @@ public class TaskServiceImpl implements TaskService {
         dto.setClientId(task.getClient().getId());
         dto.setTaskCategoryName(task.getTaskCategory().getName());
         dto.setWorkUrl(task.getWorkUrl());
+        dto.setCreatedAt(task.getCreatedAt());
 
         // Add freelancerId if assigned
         if (task.getFreelancer() != null) {

@@ -207,3 +207,10 @@ main{
 .page-link {
     background-color: #bdc9dc;
 }
+
+.card-text.posted-time,
+.card-text.submitted-time {
+    font-style: italic;
+    color: #22598a;
+    font-size: 0.9rem;
+}
