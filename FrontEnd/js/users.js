@@ -1,5 +1,6 @@
 const USER_API_URL = "http://localhost:8085/api/v1/users";
 const token = localStorage.getItem("token");
+import { showSuccessAlert, showErrorAlert, showConfirmAlert } from './alert-util.js';
 
 // Pagination variables
 let currentPage = 1;
@@ -175,7 +176,7 @@ async function loadUsers() {
 
     } catch (error) {
         console.error("Error loading users:", error);
-        alert("Failed to load users.");
+        showErrorAlert("Error", "Failed to load users.");
     }
 }
 
@@ -259,14 +260,14 @@ document.getElementById("userForm").addEventListener("submit", async (e) => {
 
         if (!response.ok) throw new Error(result.message);
 
-        alert("User added successfully!");
+        showSuccessAlert("Success", "User added successfully!");
         loadUsers();
         document.getElementById("userForm").reset();
         bootstrap.Modal.getInstance(document.getElementById("newUserModal")).hide();
 
     } catch (error) {
         console.error("Error adding user:", error);
-        alert("Failed to add user.");
+        showErrorAlert("Error", "Failed to add user." + error.message);
     }
 });
 
@@ -305,19 +306,21 @@ document.getElementById("editUserForm").addEventListener("submit", async (e) => 
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
 
-        alert("User updated successfully!");
+        showSuccessAlert("Success", "User updated successfully!");
         loadUsers();
         bootstrap.Modal.getInstance(document.getElementById("editUserModal")).hide();
 
     } catch (error) {
         console.error("Error updating user:", error);
-        alert("Failed to update user.");
+        showErrorAlert("Error", "Failed to update user." + error.message);
     }
 });
+window.openEditModal = openEditModal;
 
 // ==================== Delete User ====================
 async function deleteUser(id) {
-    if (!confirm("Are you sure you want to delete this user?")) return;
+    const confirmed = await showConfirmAlert("Are you sure?", "This user will be permanently deleted.");
+    if (!confirmed) return;
 
     try {
         const response = await fetch(`${USER_API_URL}/${id}`, {
@@ -330,14 +333,15 @@ async function deleteUser(id) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
 
-        alert("User deleted successfully!");
+        showSuccessAlert("Deleted", "User deleted successfully!");
         loadUsers();
 
     } catch (error) {
         console.error("Error deleting user:", error);
-        alert("Failed to delete user.");
+        showErrorAlert("Error", "Failed to delete user." + error.message);
     }
 }
+window.deleteUser = deleteUser;
 
 // ==================== View User Profile ====================
 async function viewUserProfile(id) {
@@ -369,6 +373,7 @@ async function viewUserProfile(id) {
 
     } catch (error) {
         console.error("Error viewing user profile:", error);
-        alert("Failed to load user profile.");
+        showErrorAlert("Error", "Failed to load user profile." + error.message);
     }
 }
+window.viewUserProfile = viewUserProfile;

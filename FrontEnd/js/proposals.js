@@ -1,5 +1,6 @@
 const PROPOSAL_BASE_URL = "http://localhost:8085/api/v1/proposals";
 const TASK_URL_BASE = "http://localhost:8085/api/v1/tasks";
+import { showSuccessAlert, showErrorAlert, showConfirmAlert } from './alert-util.js';
 
 let currentUser = {
     id: localStorage.getItem("userId"),
@@ -236,11 +237,11 @@ async function loadProposals() {
             currentPage = 1;
             renderProposalsWithPagination();
         } else {
-            alert("Failed to load proposals: " + result.message);
+            showErrorAlert("Error", "Failed to load proposals: " + result.message);
         }
     } catch (error) {
         console.error("Error loading proposals:", error);
-        alert("Error loading proposals. Please try again.");
+        showErrorAlert("Error", "Error loading proposals. Please try again.");
     }
 }
 
@@ -390,6 +391,7 @@ function viewProposalDetails(proposalId, editMode = false) {
     const modal = new bootstrap.Modal(document.getElementById("proposalDetailsModal"));
     modal.show();
 }
+window.viewProposalDetails = viewProposalDetails;
 
 // Enable edit mode for proposal
 function enableProposalEdit() {
@@ -423,21 +425,30 @@ async function saveProposalChanges() {
 
         const result = await response.json();
         if (result.code === 200) {
-            alert("Proposal updated successfully!");
-            bootstrap.Modal.getInstance(document.getElementById("proposalDetailsModal")).hide();
+            // Show alert first
+            await showSuccessAlert("Success", "Proposal updated successfully!");
+
+            // Hide modal safely
+            const modalElement = document.getElementById("proposalDetailsModal");
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+            modalInstance.hide();
+
             loadProposals();
         } else {
             alert("Failed to update proposal: " + result.message);
+            showErrorAlert("Failed", "Failed to update proposal: " + result.message);
         }
     } catch (error) {
         console.error("Error updating proposal:", error);
-        alert("Error updating proposal. Please try again.");
+        showErrorAlert("Error", "Error updating proposal. Please try again.");
     }
 }
+window.saveProposalChanges = saveProposalChanges;
 
 // ===================== Delete proposal =====================
 async function deleteProposal(proposalId) {
-    if (!confirm("Are you sure you want to delete this proposal?")) return;
+    const confirmed = await showConfirmAlert("Delete Proposal", "Are you sure you want to delete this proposal?");
+    if (!confirmed) return;
 
     try {
         const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}`, {
@@ -449,21 +460,27 @@ async function deleteProposal(proposalId) {
 
         const result = await response.json();
         if (result.code === 200) {
-            alert("Proposal deleted successfully!");
-            bootstrap.Modal.getInstance(document.getElementById("proposalDetailsModal")).hide();
+            showSuccessAlert("Deleted", "Proposal deleted successfully!");
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById("proposalDetailsModal"));
+            if (modalInstance) modalInstance.hide();
             loadProposals();
         } else {
-            alert("Failed to delete proposal: " + result.message);
+            showErrorAlert("Failed", "Failed to delete proposal: " + result.message);
         }
     } catch (error) {
         console.error("Error deleting proposal:", error);
-        alert("Error deleting proposal. Please try again.");
+        showErrorAlert("Error", "Error deleting proposal. Please try again.");
     }
 }
+window.deleteProposal = deleteProposal;
 
 // ===================== Accept proposal =====================
 async function acceptProposal(proposalId) {
-    if (!confirm("Are you sure you want to accept this proposal? This will automatically reject all other proposals for this task and assign the task to this freelancer.")) return;
+    const confirmed = await showConfirmAlert(
+        "Accept Proposal",
+        "Are you sure you want to accept this proposal? This will automatically reject all other proposals for this task."
+    );
+    if (!confirmed) return;
 
     try {
         const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}/accept`, {
@@ -476,21 +493,30 @@ async function acceptProposal(proposalId) {
 
         const result = await response.json();
         if (result.code === 200) {
-            alert("Proposal accepted successfully! The task is now in progress.");
-            bootstrap.Modal.getInstance(document.getElementById("proposalDetailsModal")).hide();
+            showSuccessAlert("Accepted", "Proposal accepted successfully! The task is now in progress.");
+
+            // Safely hide modal only if it's open
+            const modalElement = document.getElementById("proposalDetailsModal");
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+
             loadProposals();
         } else {
-            alert("Failed to accept proposal: " + result.message);
+            showErrorAlert("Failed", "Failed to accept proposal: " + result.message);
         }
     } catch (error) {
         console.error("Error accepting proposal:", error);
-        alert("Error accepting proposal. Please try again.");
+        showErrorAlert("Error", "Error accepting proposal. Please try again.");
     }
 }
+window.acceptProposal = acceptProposal;
 
 // ===================== Reject proposal =====================
 async function rejectProposal(proposalId) {
-    if (!confirm("Are you sure you want to reject this proposal?")) return;
+    const confirmed = await showConfirmAlert("Reject Proposal", "Are you sure you want to reject this proposal?");
+    if (!confirmed) return;
 
     try {
         const response = await fetch(`${PROPOSAL_BASE_URL}/${proposalId}/reject`, {
@@ -503,17 +529,25 @@ async function rejectProposal(proposalId) {
 
         const result = await response.json();
         if (result.code === 200) {
-            alert("Proposal rejected successfully!");
-            bootstrap.Modal.getInstance(document.getElementById("proposalDetailsModal")).hide();
+            showSuccessAlert("Rejected", "Proposal rejected successfully!");
+
+            // Safely hide modal only if it's open
+            const modalElement = document.getElementById("proposalDetailsModal");
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+
             loadProposals();
         } else {
-            alert("Failed to reject proposal: " + result.message);
+            showErrorAlert("Failed", "Failed to reject proposal: " + result.message);
         }
     } catch (error) {
         console.error("Error rejecting proposal:", error);
-        alert("Error rejecting proposal. Please try again.");
+        showErrorAlert("Error", "Error rejecting proposal. Please try again.");
     }
 }
+window.rejectProposal = rejectProposal;
 
 // ===================== Submit proposal (for Freelancers) =====================
 async function submitProposal(e) {
@@ -527,7 +561,7 @@ async function submitProposal(e) {
     };
 
     try {
-        const response = await fetch(PROPAL_BASE_URL, {
+        const response = await fetch(PROPOSAL_BASE_URL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -538,16 +572,24 @@ async function submitProposal(e) {
 
         const result = await response.json();
         if (result.code === 201) {
-            alert("Proposal submitted successfully!");
+            // Show alert first
+            await showSuccessAlert("Submitted", "Proposal submitted successfully!");
+
+            // Reset form
             document.getElementById("proposalForm").reset();
-            bootstrap.Modal.getInstance(document.getElementById("proposalModal")).hide();
+
+            // Hide modal safely
+            const modalElement = document.getElementById("proposalModal");
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+            modalInstance.hide();
+
             loadProposals();
         } else {
-            alert("Failed to submit proposal: " + result.message);
+            showErrorAlert("Failed", "Failed to submit proposal: " + result.message);
         }
     } catch (error) {
         console.error("Error submitting proposal:", error);
-        alert("Error submitting proposal. Please try again.");
+        showErrorAlert("Error", "Error submitting proposal. Please try again.");
     }
 }
 

@@ -69,8 +69,12 @@ public class PaymentController {
             SessionCreateParams params = SessionCreateParams.builder()
                     .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                     .setMode(SessionCreateParams.Mode.PAYMENT)
-                    .setSuccessUrl("http://localhost:3000/payment-success?session_id={CHECKOUT_SESSION_ID}")
-                    .setCancelUrl("http://localhost:3000/payment-cancel")
+//                    .setSuccessUrl("http://localhost:3000/payment-success?session_id={CHECKOUT_SESSION_ID}")
+//                    .setCancelUrl("http://localhost:3000/payment-cancel")
+
+                    .setSuccessUrl("http://localhost:8085/FrontEnd/pages/tasks.html?session_id={CHECKOUT_SESSION_ID}")  // CHANGED: Redirect to tasks.html with session_id
+                    .setCancelUrl("http://localhost:8085/FrontEnd/pages/tasks.html?cancel=1")  // CHANGED: Redirect to tasks on cancel
+
                     .addLineItem(
                             SessionCreateParams.LineItem.builder()
                                     .setQuantity(1L)

@@ -47,7 +47,7 @@ public class Task {
     @OneToOne(mappedBy = "task")
     private Payment payment;
 
-    @OneToMany(mappedBy = "task")
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications;
 
     @OneToMany(mappedBy = "task")

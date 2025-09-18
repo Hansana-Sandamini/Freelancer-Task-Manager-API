@@ -5,6 +5,7 @@ const REVIEW_API_URL = "http://localhost:8085/api/v1/reviews";
 const PAYMENT_API_BASE = "http://localhost:8085/api/v1/payments";
 const STRIPE_PUBLISHABLE_KEY = "pk_test_51S6ZBnFQgJWoxJFed40OYrsDWSXufK1kJL2BOb1miDMmeGJUmCxeuMQZh7MAgGvTo3qml5nmqJ45xBYZ8ZNyVHIX001bXmCRhQ";
 import { openChat } from './chat.js';
+import { showSuccessAlert, showErrorAlert, showConfirmAlert, showWarningAlert } from './alert-util.js';
 
 // Get token, role, and email from localStorage
 const token = localStorage.getItem("token");
@@ -629,29 +630,66 @@ if (taskForm) {
                 clientId: Number(localStorage.getItem("userId"))
             };
             await apiCall(TASK_API_BASE, "POST", newTask);
-            alert("Task created successfully!");
+            showSuccessAlert("Success", "Task created successfully!");
             taskForm.reset();
             bootstrap.Modal.getInstance(document.getElementById("newTaskModal")).hide();
             loadTasks();
         } catch (error) {
             console.error("Error creating task:", error.message);
-            alert("Error creating task: " + error.message);
+            showErrorAlert("Failed", "Error creating task: " + error.message);
         }
     });
 }
 
 // ===================== Delete Task =====================
 async function deleteTask(taskId) {
-    if (!confirm("Are you sure you want to delete this task?")) return;
+    const confirmed = await showConfirmAlert("Confirm Delete", "Are you sure you want to delete this task?");
+    if (!confirmed) return;
+
     try {
-        await apiCall(`${TASK_API_BASE}/${taskId}`, "DELETE");
-        alert("Task deleted successfully!");
-        loadTasks();
+        const response = await fetch(`${TASK_API_BASE}/${taskId}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            }
+        });
+
+
+        if (response.ok) { // Covers 200-299, including 204
+            let result = { code: response.status };
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            }
+
+            // Accept 200 or 204 as success
+            if (result.code === 200 || response.status === 204) {
+                showSuccessAlert("Deleted", "Task deleted successfully!");
+                loadTasks();
+                return;
+            }
+        }
+
+        // Error handling
+        let errorMsg = 'Unknown error';
+        try {
+            const errorResult = await response.json();
+            errorMsg = errorResult.message || errorResult.data || 'Server error';
+        } catch {
+            errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+            // Customize FK constraint error
+            if (errorMsg.includes('foreign key constraint')) {
+                errorMsg = 'Cannot delete task because it has associated records (e.g., notifications, proposals, or payments).';
+            }
+        }
+        throw new Error(errorMsg);
+
     } catch (error) {
         console.error("Error deleting task:", error.message);
-        alert("Error deleting task: " + error.message);
+        showErrorAlert("Failed", `Failed to delete task: ${error.message}`);
     }
 }
+window.deleteTask = deleteTask;
 
 // ===================== Edit Task =====================
 async function editTask(taskId) {
@@ -693,12 +731,12 @@ document.getElementById("editTaskForm").addEventListener("submit", async e => {
 
         await apiCall(`${TASK_API_BASE}/${taskId}`, "PUT", updatedTask);
 
-        alert("Task updated successfully!");
+        showSuccessAlert("Updated", "Task updated successfully!");
         bootstrap.Modal.getInstance(document.getElementById("editTaskModal")).hide();
         loadTasks();
     } catch (error) {
         console.error("Error updating task:", error.message);
-        alert("Error updating task: " + error.message);
+        showErrorAlert("Failed", "Error updating task: " + error.message);
     }
 });
 
@@ -794,9 +832,12 @@ if (proposalForm) {
             // Send proposal to backend
             await apiCall(PROPOSAL_API_URL, "POST", proposalData);
 
-            alert("Proposal submitted successfully!");
+            showSuccessAlert("Success", "Proposal submitted successfully!");
             proposalForm.reset();
-            bootstrap.Modal.getInstance(document.getElementById("proposalModal")).hide();
+
+            const modalElement = document.getElementById("proposalModal");
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+            modalInstance.hide();
 
             // Refresh task list so button changes
             loadTasks();
@@ -821,7 +862,7 @@ async function submitWork() {
     const workUrl = document.getElementById("workUrl").value;
 
     if (!workUrl) {
-        alert("Please provide a work URL");
+        showWarningAlert("Warning", "Please provide a work URL");
         return;
     }
 
@@ -847,17 +888,17 @@ async function submitWork() {
         });
 
         if (!assignedFreelancerId) {
-            alert("Error: No freelancer is assigned to this task");
+            showErrorAlert("Error", "No freelancer is assigned to this task");
             return;
         }
 
         if (assignedFreelancerId !== currentUserId) {
-            alert("Error: You are not assigned to this task. Assigned freelancer ID: " + assignedFreelancerId);
+            showErrorAlert("Error", "You are not assigned to this task. Assigned freelancer ID: " + assignedFreelancerId);
             return;
         }
 
         if (task.status !== "IN_PROGRESS") {
-            alert("Error: Task is not in progress. Current status: " + task.status);
+            showWarningAlert("Warning", "Task is not in progress. Current status: " + task.status);
             return;
         }
 
@@ -874,20 +915,20 @@ async function submitWork() {
         const result = await response.json();
 
         if (result.code === 200) {
-            alert("Work submitted successfully! The client will review your work.");
+            showSuccessAlert("Success", "Work submitted successfully! The client will review your work.");
             bootstrap.Modal.getInstance(document.getElementById("completeTaskModal")).hide();
             loadTasks();
         } else {
-            alert("Failed to submit work: " + (result.message || "Unknown error"));
+            showErrorAlert("Failed", "Failed to submit work: " + (result.message || "Unknown error"));
         }
     } catch (error) {
         console.error("Error submitting work:", error);
-        alert("Error submitting work. Please try again later.");
+        showErrorAlert("Error", "Error submitting work. Please try again later.");
     }
 }
 
 // ===================== Open Review Modal =====================
-function openReviewModal(taskId, freelancerId) {
+window.openReviewModal = function(taskId, freelancerId) {
     document.getElementById("reviewTaskId").value = taskId;
     document.getElementById("reviewFreelancerId").value = freelancerId;
 
@@ -901,7 +942,7 @@ function openReviewModal(taskId, freelancerId) {
 
     const modal = new bootstrap.Modal(document.getElementById("reviewModal"));
     modal.show();
-}
+};
 
 // ===================== Submit Review =====================
 async function submitReview() {
@@ -911,12 +952,12 @@ async function submitReview() {
     const comment = document.getElementById("reviewComment").value;
 
     if (!rating) {
-        alert("Please provide a rating");
+        showWarningAlert("Warning", "Please provide a rating");
         return;
     }
 
     if (!comment) {
-        alert("Please provide a comment");
+        showWarningAlert("Warning", "Please provide a comment");
         return;
     }
 
@@ -931,12 +972,12 @@ async function submitReview() {
 
         await apiCall(REVIEW_API_URL, "POST", reviewData);
 
-        alert("Review submitted successfully!");
+        showSuccessAlert("Success", "Review submitted successfully!");
         bootstrap.Modal.getInstance(document.getElementById("reviewModal")).hide();
         loadTasks();
     } catch (error) {
         console.error("Error submitting review:", error.message);
-        alert("Failed to submit review: " + error.message);
+        showErrorAlert("Failed to submit review: ", error.message);
     }
 }
 

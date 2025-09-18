@@ -1,5 +1,6 @@
 const REVIEW_API_URL = "http://localhost:8085/api/v1/reviews";
 const TASK_API_BASE = "http://localhost:8085/api/v1/tasks";
+import { showSuccessAlert, showErrorAlert, showConfirmAlert } from './alert-util.js';
 
 // Get token, role and user ID from localStorage
 const token = localStorage.getItem("token");
@@ -169,7 +170,7 @@ async function loadReviews() {
 
     } catch (error) {
         console.error("Error loading reviews:", error.message);
-        alert("Error loading reviews: " + error.message);
+        showErrorAlert("Error", "Error Loading Reviews: " + error.message);
     }
 }
 
@@ -424,8 +425,12 @@ function showReviewDetails(review) {
 }
 
 // Confirm delete review
-function confirmDeleteReview(reviewId) {
-    if (confirm('Are you sure you want to delete this review?')) {
+async function confirmDeleteReview(reviewId) {
+    const result = await showConfirmAlert(
+        "Are you sure?",
+        "This review will be permanently deleted."
+    );
+    if (result.isConfirmed) {
         // Set the review ID on the delete button
         const deleteBtn = document.getElementById('deleteReviewBtn');
         if (deleteBtn) {
@@ -445,7 +450,7 @@ async function deleteReview() {
 
     try {
         await apiCall(`${REVIEW_API_URL}/${reviewId}`, 'DELETE');
-        alert('Review deleted successfully!');
+        showSuccessAlert("Deleted", "Review deleted successfully!");
 
         // Close modal if open
         const modalElement = document.getElementById('reviewDetailModal');
@@ -458,6 +463,6 @@ async function deleteReview() {
         loadReviews();
     } catch (error) {
         console.error('Error deleting review:', error.message);
-        alert('Error deleting review: ' + error.message);
+        showErrorAlert("Error", "Error deleting review: " + error.message);
     }
 }

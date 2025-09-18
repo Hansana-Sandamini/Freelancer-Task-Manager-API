@@ -1,5 +1,6 @@
 const FREELANCER_API_URL = "http://localhost:8085/api/v1/users/freelancers";
 const token = localStorage.getItem("token");
+import { showErrorAlert } from './alert-util.js';
 
 // Redirect if not logged in or not a CLIENT
 if (!token || localStorage.getItem("role") !== "CLIENT") {
@@ -44,7 +45,7 @@ async function loadFreelancers() {
 
     } catch (error) {
         console.error("Error loading freelancers:", error);
-        alert("Failed to load freelancers.");
+        showErrorAlert("Error", "Failed to load freelancers. Please try again.");
     }
 }
 
@@ -78,9 +79,10 @@ async function viewUserProfile(id) {
 
     } catch (error) {
         console.error("Error viewing user profile:", error);
-        alert("Failed to load user profile.");
+        showErrorAlert("Error", "Failed to load user profile. Please try again.");
     }
 }
+window.viewUserProfile = viewUserProfile;
 
 // ==================== Init ====================
 document.addEventListener("DOMContentLoaded", loadFreelancers);
