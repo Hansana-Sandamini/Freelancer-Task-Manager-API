@@ -13,4 +13,5 @@ public interface PaymentService {
     List<PaymentDTO> getPaymentsByClientId(Long clientId);
     List<PaymentDTO> getPaymentsByFreelancerId(Long freelancerId);
     PaymentDTO getPaymentByTaskId(Long taskId);
+    Double getTotalRevenue();
 }

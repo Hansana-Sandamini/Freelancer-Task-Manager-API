@@ -214,3 +214,28 @@ main{
     color: #22598a;
     font-size: 0.9rem;
 }
+
+.list-group-item {
+    background-color: #2c3e50;
+    color: #ffffff;
+    border-color: #34495e;
+}
+
+.list-group-item .badge {
+    font-size: 0.8rem;
+}
+
+.card-header {
+    background-color: #34495e;
+    color: #ffffff;
+}
+
+.card {
+    background-color: #2c3e50;
+    border: none;
+}
+
+canvas#taskStatusChart {
+    max-height: 300px;
+    width: 100%;
+}

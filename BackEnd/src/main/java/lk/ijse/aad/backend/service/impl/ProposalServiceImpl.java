@@ -2,10 +2,7 @@ package lk.ijse.aad.backend.service.impl;
 
 import lk.ijse.aad.backend.dto.ProposalDTO;
 import lk.ijse.aad.backend.entity.*;
-import lk.ijse.aad.backend.repository.PaymentRepository;
-import lk.ijse.aad.backend.repository.ProposalRepository;
-import lk.ijse.aad.backend.repository.TaskRepository;
-import lk.ijse.aad.backend.repository.AuthRepository;
+import lk.ijse.aad.backend.repository.*;
 import lk.ijse.aad.backend.service.EmailService;
 import lk.ijse.aad.backend.service.NotificationService;
 import lk.ijse.aad.backend.service.ProposalService;
@@ -36,6 +33,7 @@ public class ProposalServiceImpl implements ProposalService {
     private final EmailService emailService;
     private final NotificationService notificationService;
     private final PaymentRepository paymentRepository;
+    private final UserRepository userRepository;
 
     @Override
     public void saveProposal(ProposalDTO proposalDTO) {
@@ -64,10 +62,22 @@ public class ProposalServiceImpl implements ProposalService {
             notificationService.createAndSendNotification(
                     task.getClient().getId(),
                     message,
-                    NotificationType.PROPOSAL_UPDATE,
+                    NotificationType.PROPOSAL_CREATED,
                     task.getId(),
                     task.getTitle()
             );
+
+            // Notify admins
+            List<User> admins = userRepository.findByRole(Role.ADMIN);
+            for (User admin : admins) {
+                notificationService.createAndSendNotification(
+                        admin.getId(),
+                        "New proposal submitted for task: " + task.getTitle() + " by " + freelancer.getName(),
+                        NotificationType.PROPOSAL_CREATED,
+                        task.getId(),
+                        task.getTitle()
+                );
+            }
 
             log.info("Proposal saved successfully for task: {}", task.getTitle());
 

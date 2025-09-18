@@ -59,6 +59,18 @@ public class TaskServiceImpl implements TaskService {
             // Send notifications to all freelancers
             sendNotificationsToFreelancers(task);
 
+            // Send notifications to all admins
+            List<User> admins = userRepository.findByRole(Role.ADMIN);
+            for (User admin : admins) {
+                notificationService.createAndSendNotification(
+                        admin.getId(),
+                        "New task created: " + task.getTitle() + " by " + client.getName(),
+                        NotificationType.TASK_CREATED,
+                        task.getId(),
+                        task.getTitle()
+                );
+            }
+
             log.info("Task saved successfully: {}", taskDTO.getTitle());
 
         } catch (Exception e) {
@@ -79,7 +91,7 @@ public class TaskServiceImpl implements TaskService {
                 notificationService.createAndSendNotification(
                         freelancer.getId(),
                         message,
-                        NotificationType.TASK_ASSIGNED,
+                        NotificationType.TASK_CREATED,
                         task.getId(),
                         task.getTitle()
                 );
@@ -244,7 +256,7 @@ public class TaskServiceImpl implements TaskService {
             notificationService.createAndSendNotification(
                     task.getClient().getId(),
                     clientMessage,
-                    NotificationType.PROPOSAL_UPDATE,
+                    NotificationType.WORK_SUBMITTED,
                     task.getId(),
                     task.getTitle()
             );
