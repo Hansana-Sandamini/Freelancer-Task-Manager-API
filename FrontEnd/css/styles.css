@@ -239,3 +239,16 @@ canvas#taskStatusChart {
     max-height: 300px;
     width: 100%;
 }
+
+.img-thumbnail {
+    border: 3px solid #dee2e6;
+    padding: 0.25rem;
+    background-color: #fff;
+    border-radius: 50% !important;
+    transition: all 0.3s ease;
+}
+
+.img-thumbnail:hover {
+    border-color: #4e73df;
+    transform: scale(1.05);
+}

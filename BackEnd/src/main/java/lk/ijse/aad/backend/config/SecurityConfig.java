@@ -37,6 +37,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/payment-success.html").permitAll()
+                        .requestMatchers("/payment-cancel.html").permitAll()
+                        .requestMatchers("/api/v1/payments/success").permitAll()
+                        .requestMatchers("/api/v1/payments/cancel").permitAll()
+                        .requestMatchers("/api/webhooks/**").permitAll()
                         .requestMatchers("/chat/**", "/chat/info").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session->
@@ -68,6 +73,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:63342"
 //                , "http://127.0.0.1:8085", "http://127.0.0.1:5500"
+                , "http://localhost:8085"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));

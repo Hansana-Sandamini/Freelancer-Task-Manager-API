@@ -368,6 +368,49 @@ async function viewUserProfile(id) {
         document.getElementById("viewUserEmail").textContent = user.email;
         document.getElementById("viewUserRole").textContent = user.role;
 
+        // Handle profile image
+        const profileImageElement = document.getElementById("viewUserProfileImage");
+        if (user.profileImage) {
+            // If user has a custom profile image
+            profileImageElement.src = user.profileImage;
+        } else {
+            // Generate default avatar using UI Avatars API
+            const defaultAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=4e73df&color=fff&bold=true&size=120`;
+            profileImageElement.src = defaultAvatarUrl;
+        }
+
+        // Handle additional fields (bio, company, skills)
+        const bioContainer = document.getElementById("viewUserBioContainer");
+        const bioElement = document.getElementById("viewUserBio");
+        const companyContainer = document.getElementById("viewUserCompanyContainer");
+        const companyElement = document.getElementById("viewUserCompany");
+        const skillsContainer = document.getElementById("viewUserSkillsContainer");
+        const skillsElement = document.getElementById("viewUserSkills");
+
+        // Show/hide bio field
+        if (user.bio) {
+            bioElement.textContent = user.bio;
+            bioContainer.style.display = 'block';
+        } else {
+            bioContainer.style.display = 'none';
+        }
+
+        // Show/hide company field
+        if (user.company) {
+            companyElement.textContent = user.company;
+            companyContainer.style.display = 'block';
+        } else {
+            companyContainer.style.display = 'none';
+        }
+
+        // Show/hide skills field
+        if (user.skills) {
+            skillsElement.textContent = user.skills;
+            skillsContainer.style.display = 'block';
+        } else {
+            skillsContainer.style.display = 'none';
+        }
+
         // Show modal
         new bootstrap.Modal(document.getElementById("viewUserModal")).show();
 

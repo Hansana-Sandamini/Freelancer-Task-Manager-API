@@ -4,6 +4,8 @@ const PROPOSAL_API_URL = "http://localhost:8085/api/v1/proposals";
 const REVIEW_API_URL = "http://localhost:8085/api/v1/reviews";
 const PAYMENT_API_BASE = "http://localhost:8085/api/v1/payments";
 const STRIPE_PUBLISHABLE_KEY = "pk_test_51S6ZBnFQgJWoxJFed40OYrsDWSXufK1kJL2BOb1miDMmeGJUmCxeuMQZh7MAgGvTo3qml5nmqJ45xBYZ8ZNyVHIX001bXmCRhQ";
+const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+
 import { openChat } from './chat.js';
 import { showSuccessAlert, showErrorAlert, showConfirmAlert, showWarningAlert } from './alert-util.js';
 
@@ -54,6 +56,13 @@ async function apiCall(url, method = "GET", body = null) {
 
 // ===================== Initial Load =====================
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if we need to refresh tasks after payment
+    if (localStorage.getItem('refreshTasksAfterPayment') === 'true') {
+        localStorage.removeItem('refreshTasksAfterPayment');
+        showSuccessAlert("Success", "Payment processed successfully! Funds are now held.");
+        loadTasks(); // Refresh to update the UI
+    }
+
     populateCategories().then(() => {
         loadTasks();
         setupEventListeners();
@@ -115,14 +124,14 @@ async function initiatePayment(taskId) {
                 "Authorization": `Bearer ${token}`
             }
         });
-
+        console.log(taskId);
         const result = await response.json();
 
         if (result.code === 200) {
-            // Redirect to Stripe Checkout
+            // Redirect to Stripe Checkout using session ID
             const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
             const { error } = await stripe.redirectToCheckout({
-                sessionId: result.data
+                sessionId: result.data  // This should be the session ID
             });
 
             if (error) {
@@ -431,14 +440,19 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
         let actionButtons = "";
 
         if (role === "CLIENT") {
-            actionButtons = `
-                <button class="btn btn-warning me-2" onclick="editTask(${task.id})">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="btn btn-danger" onclick="deleteTask(${task.id})">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
-            `;
+            // Only show Edit and Delete buttons if no freelancer is assigned
+            if (!task.freelancerId) {
+                actionButtons = `
+                    <button class="btn btn-warning me-2" onclick="editTask(${task.id})">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteTask(${task.id})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                `;
+            } else {
+                actionButtons = '';   // No Edit/Delete buttons if freelancer is assigned
+            }
 
             // Add review button for completed tasks that haven't been reviewed yet
             if (task.status === "COMPLETED" && task.freelancerId && !hasReviewedMap[task.id]) {
@@ -462,16 +476,16 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
             if (task.freelancerId || task.status === "IN_PROGRESS") {
                 const receiverName = task.freelancerName || `Freelancer ${task.freelancerId}`;
                 actionButtons += `
-                    <button class="btn btn-outline-primary ms-2 chat-button" 
-                            data-task-id="${task.id}" 
-                            data-receiver-id="${task.freelancerId}" 
-                            data-receiver-name="${receiverName}" 
+                    <button class="btn btn-outline-primary ms-2 chat-button"
+                            data-task-id="${task.id}"
+                            data-receiver-id="${task.freelancerId}"
+                            data-receiver-name="${receiverName}"
                             title="Chat with Freelancer">
                         <i class="fas fa-comments"></i>
                     </button>
                 `;
 
-                // Check payment status and add pay button if needed
+                // In the renderTasks function, update the payment button logic:
                 let paymentStatus = '';
                 let paymentButton = '';
 
@@ -487,8 +501,22 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
                         if (paymentResult.code === 200 && paymentResult.data) {
                             const payment = paymentResult.data;
 
-                            // Only show pay button if payment is pending
-                            if (payment.paymentStatus === 'PENDING') {
+                            // Show payment status based on payment status
+                            if (payment.status === 'HELD') {
+                                paymentStatus = `
+                                    <span class="badge bg-info ms-2">
+                                        <i class="fas fa-lock"></i> Paid (Held)
+                                    </span>
+                                `;
+                                paymentButton = ``;
+                            } else if (payment.status === 'COMPLETED') {
+                                paymentStatus = `
+                                    <span class="badge bg-success ms-2">
+                                        <i class="fas fa-check-circle"></i> Paid (Released)
+                                    </span>
+                                `;
+                                paymentButton = ``;
+                            } else if (payment.status === 'PENDING') {
                                 paymentButton = `
                                     <button class="btn btn-primary pay-button" data-task-id="${task.id}">
                                         <i class="fas fa-credit-card"></i> Pay Now
@@ -502,7 +530,7 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
                 }
 
                 // If no payment record exists yet, show the pay button
-                if (!paymentButton && task.freelancerId) {
+                if (!paymentButton && !paymentStatus && task.freelancerId) {
                     paymentButton = `
                         <button class="btn btn-primary pay-button" data-task-id="${task.id}">
                             <i class="fas fa-credit-card"></i> Pay Now
@@ -537,7 +565,7 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
                 actionButtons = `<span class="badge bg-danger fs-6 px-3 py-2">Proposal Rejected</span>`;
             } else if (hasProposed) {
                 if (isAssigned) {
-                    actionButtons = `<span class="badge bg-success fs-6 px-3 py-2">Assigned to You</span>`;
+                    // actionButtons = `<span class="badge bg-success fs-6 px-3 py-2">Assigned to You</span>`;
                 } else {
                     actionButtons = `<span class="badge fs-6 px-3 py-2" style="background-color: #44484d">Proposal Sent</span>`;
                 }
@@ -557,16 +585,8 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
                 `;
             }
 
-            // Show status and work link for freelancer's tasks
+            // Show work link for freelancer's tasks
             if (isAssigned) {
-                actionButtons += `
-                    <div class="mt-2">
-                        <span class="badge bg-info text-dark">
-                            <i class="fas fa-tasks"></i> ${task.status.replace('_', ' ')}
-                        </span>
-                    </div>
-                `;
-
                 if (task.workUrl) {
                     actionButtons += `
                         <div class="mt-2">
@@ -582,10 +602,10 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
             if (isAssigned && task.clientId) {
                 const clientName = task.clientName || `Client ${task.clientId}`;
                 actionButtons += `
-                    <button class="btn btn-outline-primary ms-2 chat-button" 
-                            data-task-id="${task.id}" 
-                            data-receiver-id="${task.clientId}" 
-                            data-receiver-name="${clientName}" 
+                    <button class="btn btn-outline-primary ms-2 chat-button"
+                            data-task-id="${task.id}"
+                            data-receiver-id="${task.clientId}"
+                            data-receiver-name="${clientName}"
                             title="Chat with Client">
                         <i class="fas fa-comments"></i>
                     </button>
@@ -602,7 +622,7 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
                     <p class="card-text">${task.description}</p>
                     <p class="card-text"><strong>Status:</strong> ${getStatusBadge(task.status)}</p>
                     <p class="card-text"><strong>Deadline:</strong> ${task.deadline}</p>
-                    ${task.workUrl ? `<p class="card-text"><strong>Work URL:</strong> <a href="${task.workUrl}" target="_blank" 
+                    ${task.workUrl ? `<p class="card-text"><strong>Work URL:</strong> <a href="${task.workUrl}" target="_blank"
                         style="background-color: #7082bb; color: white; padding: 10px; text-decoration: none; border-radius: 8px">
                             View Work</a></p>` : ''}
                     ${task.freelancerId && role === "CLIENT" ? `<p class="card-text"><strong>Freelancer ID:</strong> ${task.freelancerId}</p>` : ''}
@@ -669,10 +689,18 @@ if (taskForm) {
 
 // ===================== Delete Task =====================
 async function deleteTask(taskId) {
-    const confirmed = await showConfirmAlert("Confirm Delete", "Are you sure you want to delete this task?");
-    if (!confirmed) return;
-
     try {
+        // First check if the task has a freelancer assigned
+        const task = await apiCall(`${TASK_API_BASE}/${taskId}`);
+
+        if (task.freelancerId) {
+            showErrorAlert("Cannot Delete", "Cannot delete a task that has a freelancer assigned.");
+            return;
+        }
+
+        const confirmed = await showConfirmAlert("Confirm Delete", "Are you sure you want to delete this task?");
+        if (!confirmed) return;
+
         const response = await fetch(`${TASK_API_BASE}/${taskId}`, {
             method: "DELETE",
             headers: {
@@ -680,15 +708,13 @@ async function deleteTask(taskId) {
             }
         });
 
-
-        if (response.ok) { // Covers 200-299, including 204
+        if (response.ok) {
             let result = { code: response.status };
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 result = await response.json();
             }
 
-            // Accept 200 or 204 as success
             if (result.code === 200 || response.status === 204) {
                 showSuccessAlert("Deleted", "Task deleted successfully!");
                 loadTasks();
@@ -703,7 +729,6 @@ async function deleteTask(taskId) {
             errorMsg = errorResult.message || errorResult.data || 'Server error';
         } catch {
             errorMsg = `HTTP ${response.status}: ${response.statusText}`;
-            // Customize FK constraint error
             if (errorMsg.includes('foreign key constraint')) {
                 errorMsg = 'Cannot delete task because it has associated records (e.g., notifications, proposals, or payments).';
             }
@@ -723,7 +748,13 @@ async function editTask(taskId) {
         const task = await apiCall(`${TASK_API_BASE}/${taskId}`);
         if (!task) return alert("Task not found");
 
-        await populateCategories();  // categories loaded first
+        // Check if task has a freelancer assigned
+        if (task.freelancerId) {
+            showErrorAlert("Cannot Edit", "Cannot edit a task that has a freelancer assigned.");
+            return;
+        }
+
+        await populateCategories();
 
         document.getElementById("editTaskId").value = task.id;
         document.getElementById("editTaskTitle").value = task.title;
@@ -1053,3 +1084,39 @@ function getRelativeTime(timestamp) {
         return `Posted ${months} month${months === 1 ? '' : 's'} ago`;
     }
 }
+
+export async function handlePaymentSuccess() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+
+    if (sessionId) {
+        try {
+            const response = await fetch(`${PAYMENT_API_BASE}/success?session_id=${sessionId}`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.code === 200) {
+                showSuccessAlert("Success", "Payment processed successfully!");
+                // Remove the session_id from URL to prevent re-processing
+                window.history.replaceState({}, document.title, window.location.pathname);
+                loadTasks();
+            } else {
+                showPaymentError("Payment processing failed: " + result.message);
+            }
+        } catch (error) {
+            console.error("Error handling payment success:", error);
+            showPaymentError("Error processing payment. Please try again.");
+        }
+    }
+}
+
+// Call this function on page load if on the success page
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.location.pathname.includes('/payments/success')) {
+        handlePaymentSuccess();
+    }
+});

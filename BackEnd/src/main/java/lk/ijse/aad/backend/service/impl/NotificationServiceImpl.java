@@ -36,6 +36,9 @@ public class NotificationServiceImpl implements NotificationService {
             notification.setCreatedAt(LocalDateTime.now());
             notification.setRead(false);
 
+            // Convert string to enum
+            notification.setType(NotificationType.valueOf(notificationDTO.getNotificationType()));
+
             notificationRepository.save(notification);
             log.info("Notification saved successfully for user: {}", notificationDTO.getUserId());
 

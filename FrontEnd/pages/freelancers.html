@@ -160,17 +160,40 @@
 
 <!-- View Profile Modal -->
 <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="max-width: 650px">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="viewUserModalLabel">User Profile</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p><strong>ID:</strong> <span id="viewUserId"></span></p>
-                <p><strong>Name:</strong> <span id="viewUserName"></span></p>
-                <p><strong>Email:</strong> <span id="viewUserEmail"></span></p>
-                <p><strong>Role:</strong> <span id="viewUserRole"></span></p>
+                <div class="text-center mb-4">
+                    <img id="viewUserProfileImage" src="" alt="Profile Image"
+                         class="rounded-circle img-thumbnail" style="width: 200px; height: 200px; object-fit: cover;">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>ID:</strong> <span id="viewUserId"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Name:</strong> <span id="viewUserName"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Email:</strong> <span id="viewUserEmail"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Role:</strong> <span id="viewUserRole"></span>
+                    </div>
+                    <div class="col-12 mb-3" id="viewUserBioContainer">
+                        <strong>Bio:</strong> <span id="viewUserBio"></span>
+                    </div>
+                    <div class="col-12 mb-3" id="viewUserCompanyContainer">
+                        <strong>Company:</strong> <span id="viewUserCompany"></span>
+                    </div>
+                    <div class="col-12 mb-3" id="viewUserSkillsContainer">
+                        <strong>Skills:</strong> <span id="viewUserSkills"></span>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
