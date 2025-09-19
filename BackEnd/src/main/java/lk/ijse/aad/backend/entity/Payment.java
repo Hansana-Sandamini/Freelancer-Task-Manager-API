@@ -24,7 +24,7 @@ public class Payment {
     private LocalDate paymentDate;
 
     @Enumerated(EnumType.STRING)
-    private PaymentStatus status;  // PENDING, COMPLETED, FAILED
+    private PaymentStatus status;  // PENDING, HELD, COMPLETED, FAILED
 
     @Column(unique = true)
     private String stripeSessionId;  // Store Stripe checkout session ID

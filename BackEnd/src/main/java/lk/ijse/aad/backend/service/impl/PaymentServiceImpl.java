@@ -1,6 +1,6 @@
 package lk.ijse.aad.backend.service.impl;
 
-import com.stripe.model.checkout.Session;
+import com.stripe.model.PaymentIntent;
 import lk.ijse.aad.backend.dto.PaymentDTO;
 import lk.ijse.aad.backend.entity.Payment;
 import lk.ijse.aad.backend.entity.PaymentStatus;
@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,37 +32,121 @@ public class PaymentServiceImpl implements PaymentService {
     private final ModelMapper modelMapper;
 
     @Override
-    public void handleSuccessfulPayment(Session session) {
+    public void handleSuccessfulPayment(PaymentIntent paymentIntent, Map<String, String> metadata) {
         try {
-            Long taskId = Long.valueOf(session.getMetadata().get("taskId"));
-            Long clientId = Long.valueOf(session.getMetadata().get("clientId"));
-            Long freelancerId = Long.valueOf(session.getMetadata().get("freelancerId"));
+            log.info("Processing PaymentIntent with ID: {}, Metadata from session: {}",
+                    paymentIntent.getId(), metadata);
 
-            Task task = taskRepository.findById(taskId)
-                    .orElseThrow(() -> new RuntimeException("Task not found with ID: " + taskId));
-            User client = authRepository.findById(clientId)
-                    .orElseThrow(() -> new RuntimeException("Client not found with ID: " + clientId));
-            User freelancer = authRepository.findById(freelancerId)
-                    .orElseThrow(() -> new RuntimeException("Freelancer not found with ID: " + freelancerId));
+            // Use metadata passed from the session
+            String taskIdStr = metadata.get("taskId");
+            String clientIdStr = metadata.get("clientId");
+            String freelancerIdStr = metadata.get("freelancerId");
 
-            Payment payment = Payment.builder()
-                    .stripeSessionId(session.getId())
-                    .amount(session.getAmountTotal() / 100.0) // paise → rupees
-                    .currency(session.getCurrency())
-                    .paymentDate(LocalDate.now())
-                    .status(PaymentStatus.COMPLETED)
-                    .task(task)
-                    .client(client)
-                    .freelancer(freelancer)
-                    .build();
+            log.info("Using metadata - taskId: {}, clientId: {}, freelancerId: {}",
+                    taskIdStr, clientIdStr, freelancerIdStr);
 
-            paymentRepository.save(payment);
-            log.info("Payment saved successfully for task: {}", task.getTitle());
+            if (taskIdStr == null || clientIdStr == null || freelancerIdStr == null) {
+                log.error("Missing metadata: taskId={}, clientId={}, freelancerId={}",
+                        taskIdStr, clientIdStr, freelancerIdStr);
+                throw new IllegalArgumentException("Missing metadata: taskId, clientId, or freelancerId is null");
+            }
+
+            Long taskId;
+            Long clientId;
+            Long freelancerId;
+            try {
+                taskId = Long.valueOf(taskIdStr);
+                clientId = Long.valueOf(clientIdStr);
+                freelancerId = Long.valueOf(freelancerIdStr);
+            } catch (NumberFormatException e) {
+                log.error("Invalid metadata format in PaymentIntent {}: taskId={}, clientId={}, freelancerId={}",
+                        paymentIntent.getId(), taskIdStr, clientIdStr, freelancerIdStr, e);
+                throw new IllegalArgumentException("Invalid metadata format: taskId, clientId, or freelancerId", e);
+            }
+
+            // Check if payment already exists for this task
+            Optional<Payment> existingPayment = paymentRepository.findByTaskId(taskId);
+            if (existingPayment.isPresent()) {
+                // Update existing payment instead of creating new one
+                Payment payment = existingPayment.get();
+                payment.setStripeSessionId(paymentIntent.getId());
+                payment.setAmount(paymentIntent.getAmount() / 100.0);
+                payment.setCurrency(paymentIntent.getCurrency());
+                payment.setPaymentDate(LocalDate.now());
+                payment.setStatus(PaymentStatus.HELD);
+
+                paymentRepository.save(payment);
+                log.info("Payment updated successfully for task: {}", taskId);
+            } else {
+                // Create new payment
+                Task task = taskRepository.findById(taskId)
+                        .orElseThrow(() -> new RuntimeException("Task not found with ID: " + taskId));
+                User client = authRepository.findById(clientId)
+                        .orElseThrow(() -> new RuntimeException("Client not found with ID: " + clientId));
+                User freelancer = authRepository.findById(freelancerId)
+                        .orElseThrow(() -> new RuntimeException("Freelancer not found with ID: " + freelancerId));
+
+                Payment payment = Payment.builder()
+                        .stripeSessionId(paymentIntent.getId())
+                        .amount(paymentIntent.getAmount() / 100.0)
+                        .currency(paymentIntent.getCurrency())
+                        .paymentDate(LocalDate.now())
+                        .status(PaymentStatus.HELD)
+                        .task(task)
+                        .client(client)
+                        .freelancer(freelancer)
+                        .build();
+
+                paymentRepository.save(payment);
+                log.info("Payment created successfully for task: {}", task.getTitle());
+            }
 
         } catch (Exception e) {
-            log.error("Error while saving Stripe payment", e);
-            throw new RuntimeException("Failed to save Stripe payment: " + e.getMessage(), e);
+            log.error("Error while processing Stripe payment for PaymentIntent {}: {}",
+                    paymentIntent.getId(), e.getMessage(), e);
+            throw new RuntimeException("Failed to process Stripe payment: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public void confirmPayment(String paymentIntentId) {
+        try {
+            PaymentIntent intent = PaymentIntent.retrieve(paymentIntentId);
+            if ("succeeded".equals(intent.getStatus())) {
+                Long taskId = Long.valueOf(intent.getMetadata().get("taskId"));
+                Payment payment = Payment.builder()
+                        .stripeSessionId(intent.getId())
+                        .amount(intent.getAmount() / 100.0)
+                        .currency(intent.getCurrency())
+                        .paymentDate(LocalDate.now())
+                        .status(PaymentStatus.HELD)
+                        .task(taskRepository.findById(taskId).orElseThrow())
+                        .client(authRepository.findById(Long.valueOf(intent.getMetadata().get("clientId"))).orElseThrow())
+                        .freelancer(authRepository.findById(Long.valueOf(intent.getMetadata().get("freelancerId"))).orElseThrow())
+                        .build();
+                paymentRepository.save(payment);
+                log.info("Payment confirmed and held for task: {}", taskId);
+            } else {
+                throw new RuntimeException("Payment not succeeded, status: " + intent.getStatus());
+            }
+        } catch (Exception e) {
+            log.error("Error confirming payment", e);
+            throw new RuntimeException("Failed to confirm payment: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void releasePayment(Long taskId) {
+        Payment payment = paymentRepository.findByTaskId(taskId)
+                .orElseThrow(() -> new RuntimeException("Payment not found for task ID: " + taskId));
+
+        if (payment.getStatus() != PaymentStatus.HELD) {
+            throw new RuntimeException("Payment is not in held status. Cannot release.");
+        }
+
+        payment.setStatus(PaymentStatus.COMPLETED);
+        paymentRepository.save(payment);
+        log.info("Payment released (transferred to freelancer) for task ID: {}", taskId);
     }
 
     @Override

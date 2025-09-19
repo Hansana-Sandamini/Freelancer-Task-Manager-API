@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Successful</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="/js/tasks.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #7298d0 0%, #113e85 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Success container */
+        .success-container {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* Success icon */
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            animation: scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .success-icon::before {
+            content: "";
+            width: 40px;
+            height: 20px;
+            border: solid white;
+            border-width: 0 0 4px 4px;
+            transform: rotate(-45deg);
+            position: absolute;
+            top: 30px;
+        }
+
+        /* Text styles */
+        h1 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        p {
+            color: #555;
+            margin-bottom: 30px;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        /* Button styles */
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+            display: inline-block;
+        }
+
+        .button:hover {
+            background-color: #388E3C;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        /* Countdown message */
+        .countdown {
+            margin-top: 20px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scaleUp {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .success-container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            p {
+                font-size: 16px;
+            }
+
+            .success-icon {
+                width: 70px;
+                height: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="success-container">
+    <div class="success-icon"></div>
+    <h1>Payment Successful!</h1>
+    <p>Your payment has been processed successfully. Thank you for your purchase!</p>
+    <button class="button" onclick="goBackToTasks()">Return to Tasks</button>
+    <p class="countdown">You will be redirected automatically in <span id="countdown">3</span> seconds</p>
+</div>
+
+<script>
+    async function handlePaymentSuccess(sessionId) {
+        try {
+            const response = await fetch(`http://localhost:8085/api/v1/payments/success?session_id=${sessionId}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + localStorage.getItem("token")
+                }
+            });
+
+            console.log(sessionId);
+
+            const result = await response.json();
+            console.log("Payment success result:", result);
+
+            if (result.code === 200) {
+                // Store in localStorage that we need to refresh tasks
+                localStorage.setItem('refreshTasksAfterPayment', 'true');
+            } else {
+                console.error("Payment processing failed:", result.message);
+            }
+        } catch (error) {
+            console.error("Error handling payment success:", error);
+        }
+    }
+
+    function goBackToTasks() {
+        window.location.href = 'http://localhost:63342/Freelancer-Task-Manager-API/FrontEnd/pages/tasks.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        if (sessionId) {
+            handlePaymentSuccess(sessionId);
+        }
+
+        // Redirect back after 3 sec
+        setTimeout(goBackToTasks, 3000);
+    });
+</script>
+
+</body>
+</html>

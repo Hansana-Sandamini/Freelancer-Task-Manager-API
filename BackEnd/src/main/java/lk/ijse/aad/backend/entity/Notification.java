@@ -27,6 +27,7 @@ public class Notification {
     private boolean isRead;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private NotificationType type;  // TASK_ASSIGNED, PROPOSAL_UPDATE, DEADLINE_REMINDER, etc.
 
     @ManyToOne
