@@ -7,7 +7,7 @@ The system enables **task posting, proposal handling, reviews, payments, real-ti
 ---
 
 ## 🎥 Demo Video
-Check out the system in action on YouTube:
+Check out the system in action on YouTube: https://www.youtube.com/watch?v=pDwRAlFTNUE
 
 ---
 
