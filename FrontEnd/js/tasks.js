@@ -485,7 +485,7 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
                     </button>
                 `;
 
-                // In the renderTasks function, update the payment button logic:
+                // Payment button logic
                 let paymentStatus = '';
                 let paymentButton = '';
 
@@ -548,6 +548,18 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
                     <i class="fas fa-trash"></i> Delete
                 </button>
             `;
+
+            // Check if the task is in progress
+            const isTaskAssigned = !!task.freelancerId;
+            if (isTaskAssigned) {
+                // If task is in progress, show disabled "Can't Delete" button
+                actionButtons = `
+                    <button class="btn btn-outline-secondary disabled" disabled title="This task is already assigned to another freelancer"
+                        style="color: #2b375d; border: 1px solid #2b375d; font-weight: 550">
+                        <i class="fas fa-ban"></i> Can't Delete
+                    </button>`
+                ;
+            }
         } else if (role === "FREELANCER") {
             const currentUserId = Number(localStorage.getItem("userId"));
             const hasProposed = freelancerProposals.some(p => p.taskId === task.id);
@@ -561,15 +573,26 @@ async function renderTasks(tasks, freelancerProposals = [], freelancerRejectedPr
             const acceptedProposal = taskAssignmentMap[task.id];
             const isAssigned = acceptedProposal && acceptedProposal.freelancerId === currentUserId;
 
+            // Check if the task is already assigned to any freelancer
+            const isTaskAssigned = !!task.freelancerId;
+
             if (hasRejectedProposal) {
                 actionButtons = `<span class="badge bg-danger fs-6 px-3 py-2">Proposal Rejected</span>`;
             } else if (hasProposed) {
                 if (isAssigned) {
-                    // actionButtons = `<span class="badge bg-success fs-6 px-3 py-2">Assigned to You</span>`;
+                    // No need to show "Assigned to You" badge, as it's implied by other buttons
                 } else {
                     actionButtons = `<span class="badge fs-6 px-3 py-2" style="background-color: #44484d">Proposal Sent</span>`;
                 }
+            } else if (isTaskAssigned) {
+                // If task is assigned to another freelancer, show disabled "Can't Propose" button
+                actionButtons = `
+                    <button class="btn btn-outline-secondary disabled" disabled title="This task is already assigned to another freelancer"
+                        style="color: #2b375d; border: 1px solid #2b375d; font-weight: 550">
+                        <i class="fas fa-ban"></i> Can't Propose
+                    </button>`;
             } else {
+                // Show propose button if task is not assigned and freelancer hasn't proposed
                 actionButtons = `
                     <button class="btn btn-outline-primary propose-button" data-task-id="${task.id}">
                         <i class="fas fa-paper-plane"></i> Propose

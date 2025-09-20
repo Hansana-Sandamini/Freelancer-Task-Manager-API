@@ -112,7 +112,7 @@ if (signupForm) {
         try {
             const result = await apiCall(`${API_BASE_URL}/register`, "POST", data);
             console.log("Registered:", result);
-            alert("Registration successful! Please login.");
+            // alert("Registration successful! Please login.");
             window.location.href = "/Freelancer-Task-Manager-API/FrontEnd/pages/signin.html";
         } catch (error) {
             console.error("Registration error:", error.message);
