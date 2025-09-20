@@ -2,17 +2,17 @@ package lk.ijse.aad.backend.service.impl;
 
 import com.stripe.model.PaymentIntent;
 import lk.ijse.aad.backend.dto.PaymentDTO;
-import lk.ijse.aad.backend.entity.Payment;
-import lk.ijse.aad.backend.entity.PaymentStatus;
-import lk.ijse.aad.backend.entity.Task;
-import lk.ijse.aad.backend.entity.User;
+import lk.ijse.aad.backend.entity.*;
 import lk.ijse.aad.backend.repository.PaymentRepository;
 import lk.ijse.aad.backend.repository.TaskRepository;
 import lk.ijse.aad.backend.repository.AuthRepository;
+import lk.ijse.aad.backend.service.EmailService;
+import lk.ijse.aad.backend.service.NotificationService;
 import lk.ijse.aad.backend.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -30,6 +30,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final TaskRepository taskRepository;
     private final AuthRepository authRepository;
     private final ModelMapper modelMapper;
+    private final NotificationService notificationService;
+    private final EmailService emailService;
 
     @Override
     public void handleSuccessfulPayment(PaymentIntent paymentIntent, Map<String, String> metadata) {
@@ -98,6 +100,10 @@ public class PaymentServiceImpl implements PaymentService {
                         .build();
 
                 paymentRepository.save(payment);
+
+                // Send notifications and emails
+                sendPaymentNotifications(payment, "HELD");
+
                 log.info("Payment created successfully for task: {}", task.getTitle());
             }
 
@@ -146,6 +152,10 @@ public class PaymentServiceImpl implements PaymentService {
 
         payment.setStatus(PaymentStatus.COMPLETED);
         paymentRepository.save(payment);
+
+        // Send notifications and emails for released payment
+        sendPaymentNotifications(payment, "RELEASED");
+
         log.info("Payment released (transferred to freelancer) for task ID: {}", taskId);
     }
 
@@ -264,6 +274,121 @@ public class PaymentServiceImpl implements PaymentService {
         dto.setStripeSessionId(payment.getStripeSessionId());
         dto.setCurrency(payment.getCurrency());
         return dto;
+    }
+
+    private void sendPaymentNotifications(Payment payment, String paymentEvent) {
+        try {
+            Task task = payment.getTask();
+            User client = payment.getClient();
+            User freelancer = payment.getFreelancer();
+
+            if ("HELD".equals(paymentEvent)) {
+                // Notify client about successful payment
+                String clientMessage = String.format(
+                        "Payment of %.2f %s for task '%s' has been received and is being held.",
+                        payment.getAmount(), payment.getCurrency(), task.getTitle()
+                );
+
+                notificationService.createAndSendNotification(
+                        client.getId(),
+                        clientMessage,
+                        NotificationType.PAYMENT_RECEIVED,
+                        task.getId(),
+                        task.getTitle()
+                );
+
+                // Notify freelancer about payment received (held)
+                String freelancerMessage = String.format(
+                        "Payment of %.2f %s for task '%s' has been received and will be released upon completion.",
+                        payment.getAmount(), payment.getCurrency(), task.getTitle()
+                );
+
+                notificationService.createAndSendNotification(
+                        freelancer.getId(),
+                        freelancerMessage,
+                        NotificationType.PAYMENT_RECEIVED,
+                        task.getId(),
+                        task.getTitle()
+                );
+
+                // Send emails
+                sendPaymentEmail(client, "Payment Received - Held",
+                        String.format("""
+                    <h2>Payment Received Successfully</h2>
+                    <p>Your payment of <b>%.2f %s</b> for the task <b>%s</b> has been received successfully.</p>
+                    <p>The payment is currently being held and will be released to the freelancer upon task completion.</p>
+                    <p>Thank you for using TaskFlow!</p>
+                    """, payment.getAmount(), payment.getCurrency(), task.getTitle()));
+
+                sendPaymentEmail(freelancer, "Payment Received - Awaiting Release",
+                        String.format("""
+                    <h2>Payment Received</h2>
+                    <p>A payment of <b>%.2f %s</b> for the task <b>%s</b> has been received from the client.</p>
+                    <p>The payment is currently being held and will be released to you upon successful completion of the task.</p>
+                    <p>Best regards,<br>The TaskFlow Team</p>
+                    """, payment.getAmount(), payment.getCurrency(), task.getTitle()));
+
+            } else if ("RELEASED".equals(paymentEvent)) {
+                // Notify freelancer about released payment
+                String freelancerMessage = String.format(
+                        "Payment of %.2f %s for task '%s' has been released to your account!",
+                        payment.getAmount(), payment.getCurrency(), task.getTitle()
+                );
+
+                notificationService.createAndSendNotification(
+                        freelancer.getId(),
+                        freelancerMessage,
+                        NotificationType.PAYMENT_RELEASED,
+                        task.getId(),
+                        task.getTitle()
+                );
+
+                // Notify client about payment release
+                String clientMessage = String.format(
+                        "Payment of %.2f %s for task '%s' has been released to the freelancer.",
+                        payment.getAmount(), payment.getCurrency(), task.getTitle()
+                );
+
+                notificationService.createAndSendNotification(
+                        client.getId(),
+                        clientMessage,
+                        NotificationType.PAYMENT_RELEASED,
+                        task.getId(),
+                        task.getTitle()
+                );
+
+                // Send emails
+                sendPaymentEmail(freelancer, "Payment Released!",
+                        String.format("""
+                    <h2>💰 Payment Released!</h2>
+                    <p>Great news! Your payment of <b>%.2f %s</b> for the task <b>%s</b> has been released to your account.</p>
+                    <p>The funds should be available in your account shortly.</p>
+                    <p>Thank you for your great work!</p>
+                    <p>Best regards,<br>The TaskFlow Team</p>
+                    """, payment.getAmount(), payment.getCurrency(), task.getTitle()));
+
+                sendPaymentEmail(client, "Payment Released to Freelancer",
+                        String.format("""
+                    <h2>Payment Released</h2>
+                    <p>The payment of <b>%.2f %s</b> for the task <b>%s</b> has been successfully released to the freelancer.</p>
+                    <p>Thank you for using TaskFlow for your project!</p>
+                    <p>Best regards,<br>The TaskFlow Team</p>
+                    """, payment.getAmount(), payment.getCurrency(), task.getTitle()));
+            }
+
+        } catch (Exception e) {
+            log.error("Error sending payment notifications for payment ID: {}", payment.getId(), e);
+        }
+    }
+
+    @Async
+    protected void sendPaymentEmail(User user, String subject, String htmlContent) {
+        try {
+            emailService.sendEmail(user.getEmail(), subject, htmlContent);
+            log.info("Payment email sent to: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send payment email to: {}", user.getEmail(), e);
+        }
     }
 
 }

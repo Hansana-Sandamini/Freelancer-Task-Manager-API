@@ -11,6 +11,10 @@ const userId = localStorage.getItem("userId");
 let allReviews = [];
 let allTasks = [];
 
+// Pagination variables
+const ITEMS_PER_PAGE = 3;
+let currentPage = 1;
+
 // Helper function for API calls with JWT
 async function apiCall(url, method = "GET", body = null) {
     const options = {
@@ -44,6 +48,7 @@ function setupEventListeners() {
     const refreshBtn = document.getElementById('btn-refresh');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function() {
+            currentPage = 1; // Reset to first page on refresh
             loadReviews();
             loadTasksForFilter();
         });
@@ -54,17 +59,29 @@ function setupEventListeners() {
     const clearFiltersBtn = document.getElementById('clearFilters');
 
     if (applyFiltersBtn) {
-        applyFiltersBtn.addEventListener('click', applyFilters);
+        applyFiltersBtn.addEventListener('click', function() {
+            currentPage = 1; // Reset to first page on filter apply
+            applyFilters();
+        });
     }
 
     if (clearFiltersBtn) {
-        clearFiltersBtn.addEventListener('click', clearFilters);
+        clearFiltersBtn.addEventListener('click', function() {
+            currentPage = 1; // Reset to first page on filter clear
+            clearFilters();
+        });
     }
 
     // Delete review button in modal
     const deleteBtn = document.getElementById('deleteReviewBtn');
     if (deleteBtn) {
         deleteBtn.addEventListener('click', deleteReview);
+    }
+
+    // Pagination event listener
+    const paginationContainer = document.getElementById('pagination');
+    if (paginationContainer) {
+        paginationContainer.addEventListener('click', handlePaginationClick);
     }
 }
 
@@ -102,7 +119,6 @@ async function loadTasksForFilter() {
             allTasks = await apiCall(`${TASK_API_BASE}/client/${userId}`);
         } else if (role === 'FREELANCER') {
             // Freelancers see only tasks assigned to them
-            // First get all tasks to find which ones are assigned to this freelancer
             const allTasksData = await apiCall(TASK_API_BASE);
             allTasks = allTasksData.filter(task => task.freelancerId == userId);
         }
@@ -199,8 +215,6 @@ function updateStatistics(reviews) {
     totalReviewsElem.textContent = totalReviews;
     avgRatingElem.textContent = avgRating;
     monthReviewsElem.textContent = monthReviews;
-
-    // Pending reviews logic would depend on your business rules
     pendingReviewsElem.textContent = '0';
 }
 
@@ -236,7 +250,7 @@ function applyFilters() {
         });
     }
 
-    // Display filtered reviews
+    // Display filtered reviews with pagination
     displayReviews(filteredReviews);
 }
 
@@ -250,16 +264,43 @@ function clearFilters() {
     if (taskFilter) taskFilter.value = '';
     if (dateFilter) dateFilter.value = '';
 
+    // Reset to first page
+    currentPage = 1;
+
     // Display all reviews
     displayReviews(allReviews);
 }
 
-// Display reviews in the UI
+// Handle pagination click
+function handlePaginationClick(event) {
+    event.preventDefault();
+    const target = event.target.closest('.page-link');
+    if (!target) return;
+
+    const page = target.getAttribute('data-page');
+    if (!page) return;
+
+    if (page === 'previous' && currentPage > 1) {
+        currentPage--;
+    } else if (page === 'next') {
+        const totalPages = Math.ceil(allReviews.length / ITEMS_PER_PAGE);
+        if (currentPage < totalPages) {
+            currentPage++;
+        }
+    } else {
+        currentPage = parseInt(page);
+    }
+
+    applyFilters();
+}
+
+// Display reviews in the UI with pagination
 function displayReviews(reviews) {
     const reviewsContainer = document.getElementById('reviewsContainer');
     const noReviewsMessage = document.getElementById('noReviewsMessage');
+    const paginationContainer = document.getElementById('pagination');
 
-    if (!reviewsContainer || !noReviewsMessage) return;
+    if (!reviewsContainer || !noReviewsMessage || !paginationContainer) return;
 
     // Show message if no reviews
     if (reviews.length === 0) {
@@ -287,6 +328,7 @@ function displayReviews(reviews) {
         }
 
         reviewsContainer.innerHTML = '';
+        paginationContainer.innerHTML = '';
         return;
     }
 
@@ -303,14 +345,51 @@ function displayReviews(reviews) {
         adminMessage.classList.add('d-none');
     }
 
+    // Calculate pagination
+    const totalPages = Math.ceil(reviews.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const paginatedReviews = reviews.slice(startIndex, endIndex);
+
     // Clear container
     reviewsContainer.innerHTML = '';
 
     // Add each review to the container
-    reviews.forEach(review => {
+    paginatedReviews.forEach(review => {
         const reviewCard = createReviewCard(review);
         reviewsContainer.appendChild(reviewCard);
     });
+
+    // Update pagination controls
+    updatePagination(totalPages);
+}
+
+// Update pagination controls
+function updatePagination(totalPages) {
+    const paginationContainer = document.getElementById('pagination');
+    if (!paginationContainer) return;
+
+    paginationContainer.innerHTML = '';
+
+    // Previous button
+    const prevItem = document.createElement('li');
+    prevItem.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevItem.innerHTML = `<a class="page-link" href="#" data-page="previous">Previous</a>`;
+    paginationContainer.appendChild(prevItem);
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        const pageItem = document.createElement('li');
+        pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        pageItem.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+        paginationContainer.appendChild(pageItem);
+    }
+
+    // Next button
+    const nextItem = document.createElement('li');
+    nextItem.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextItem.innerHTML = `<a class="page-link" href="#" data-page="next">Next</a>`;
+    paginationContainer.appendChild(nextItem);
 }
 
 // Create a review card
@@ -458,6 +537,9 @@ async function deleteReview() {
             const modal = bootstrap.Modal.getInstance(modalElement);
             if (modal) modal.hide();
         }
+
+        // Reset to first page after deletion
+        currentPage = 1;
 
         // Reload reviews
         loadReviews();
